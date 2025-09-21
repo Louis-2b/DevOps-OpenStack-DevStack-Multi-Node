@@ -12,7 +12,7 @@ Système d'exploitation : **Debian 12**.
 
 ---
 
-## 1. Préparation du système (A faire sur les **2 machines (1 contrôleur + 1 compute))
+## 1. Préparation du système (A faire sur les 2 machines **1 contrôleur + 1 compute**)
 
 ```bash
 su -
