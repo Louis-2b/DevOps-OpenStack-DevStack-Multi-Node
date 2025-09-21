@@ -179,3 +179,6 @@ openstack endpoint list
 
 # Accédez à l’interface Horizon via un navigateur : http://<HOST_IP>/dashboard.
 ```
+
+
+## 2. Configuration des nœuds compute
