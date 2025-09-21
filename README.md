@@ -182,3 +182,10 @@ openstack endpoint list
 
 
 ## 2. Configuration des nœuds compute
+Les nœuds de calcul (compute) exécutent les services de virtualisation (Nova compute) et de réseau (Neutron agents).
+
+### Créer le fichier de configuration local.conf
+
+```bash
+nano local.conf
+
