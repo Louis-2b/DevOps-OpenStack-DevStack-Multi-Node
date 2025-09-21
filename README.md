@@ -12,7 +12,7 @@ Système d'exploitation : **Debian 12**.
 
 ---
 
-## 1. Préparation du système (A faire sur les 2 machines **1 contrôleur + 1 compute**)
+## 1. Préparation du système (A faire sur les 2 machines 1 contrôleur + 1 compute)
 
 ```bash
 su -
@@ -97,7 +97,7 @@ Redémarrer :
 sudo systemctl restart networking
 ```
 
-## 3. SSH (A faire sur la machine **contrôleur**)
+## 3. SSH (A faire sur la machine contrôleur)
 ###  Génération de la paire de clés SSH (Ed25519 recommandé pour la sécurité)
 
 ```bash
@@ -166,4 +166,12 @@ SERVICE_PASSWORD=< VOTRE_MOT_DE_PASSE >
 ./stack.sh
 
 # Ce script télécharge, configure et déploie les services OpenStack sur le nœud contrôleur. Cela peut prendre du temps (10-30 minutes selon la machine).
+```
+
+### Vérifier l’installation
+
+```bash
+# Une fois terminé, vérifiez que les services sont en cours d’exécution
+source openrc
+openstack service list
 ```
