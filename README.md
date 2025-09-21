@@ -172,6 +172,8 @@ SERVICE_PASSWORD=< VOTRE_MOT_DE_PASSE >
 
 ```bash
 # Une fois terminé, vérifiez que les services sont en cours d’exécution
-source openrc
+source openrc admin admin
+
 openstack service list
+openstack endpoint list
 ```
