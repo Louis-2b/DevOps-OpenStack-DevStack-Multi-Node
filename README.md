@@ -124,7 +124,7 @@ cd devstack
 # Étapes d’installation
 
 ## 1. Configuration du nœud contrôleur
-Le nœud contrôleur exécute les services principaux d’OpenStack (API, Keystone, Nova Scheduler, Neutron, etc.).
+Le nœud contrôleur exécute tous les services OpenStack.
 
 ### Créer le fichier de configuration local.conf
 
@@ -157,6 +157,9 @@ RABBIT_PASSWORD=< VOTRE_MOT_DE_PASSE >
 
 # Mot de passe services
 SERVICE_PASSWORD=< VOTRE_MOT_DE_PASSE >
+
+# Désactiver les services qui ne doivent pas tourner sur compute 
+disable_service tempest
 ```
 
 ### Lancer l’installation
@@ -182,7 +185,7 @@ openstack endpoint list
 
 
 ## 2. Configuration des nœuds compute
-Les nœuds de calcul (compute) exécutent les services de virtualisation (Nova compute) et de réseau (Neutron agents).
+Les nœuds de calcul exécutent uniquement les services de travail OpenStack.
 
 ### Créer le fichier de configuration local.conf
 
