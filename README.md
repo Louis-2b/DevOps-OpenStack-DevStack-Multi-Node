@@ -113,7 +113,7 @@ cat ~/.ssh/devstack.pub | ssh alcapone@192.168.1.41 "mkdir -p ~/.ssh && chmod 70
 ssh -i ~/.ssh/devstack alcapone@192.168.1.41
 ```
 
-### Téléchargement de DevStack
+### Téléchargement de DevStack sur les 2 machines (1 contrôleur + 1 compute)
 
 ```bash
 git clone https://opendev.org/openstack/devstack
