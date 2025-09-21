@@ -176,4 +176,6 @@ source openrc admin admin
 
 openstack service list
 openstack endpoint list
+
+# Accédez à l’interface Horizon via un navigateur : http://<HOST_IP>/dashboard.
 ```
