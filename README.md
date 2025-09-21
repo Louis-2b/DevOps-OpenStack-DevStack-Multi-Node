@@ -108,4 +108,7 @@ ssh-keygen -t ed25519 -C "devstack" -f ~/.ssh/devstack
 
 ```bash
 cat ~/.ssh/devstack.pub | ssh alcapone@192.168.1.41 "mkdir -p ~/.ssh && chmod 700 ~/.ssh && cat >> ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys"
+
+# Tester la connexion
+ssh -i ~/.ssh/devstack alcapone@192.168.1.41
 ```
