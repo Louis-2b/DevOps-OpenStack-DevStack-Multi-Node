@@ -192,3 +192,47 @@ Les nœuds de calcul exécutent uniquement les services de travail OpenStack.
 ```bash
 nano local.conf
 
+[[local|localrc]]
+
+# Adresse IP du nœud compute (celle de ta machine sur le LAN)
+HOST_IP=192.168.1.41
+
+# Plage réseau interne pour les instances (ne doit pas entrer en conflit avec ton LAN)
+FIXED_RANGE=10.0.1.0/24
+
+# Plage d’adresses IP flottantes (doit appartenir au même réseau que HOST_IP)
+FLOATING_RANGE=192.168.1.120/24
+
+# Emplacement du fichier de logs
+LOGFILE=/opt/stack/logs/stack.sh.log
+
+# Mots de passe (doivent correspondre à ceux du contrôleur)
+ADMIN_PASSWORD=adminuser
+DATABASE_PASSWORD=labstack
+RABBIT_PASSWORD=labstack
+SERVICE_PASSWORD=labstack
+
+# Type de base de données
+DATABASE_TYPE=mysql
+
+# Adresse IP du nœud contrôleur
+SERVICE_HOST=192.168.1.50
+
+# Hôtes des services centraux (sur le contrôleur)
+MYSQL_HOST=$SERVICE_HOST
+RABBIT_HOST=$SERVICE_HOST
+GLANCE_HOSTPORT=$SERVICE_HOST:9292
+
+# Services activés sur le nœud compute
+ENABLED_SERVICES=n-cpu,c-vol,placement-client,ovn-controller,ovs-vswitchd,ovsdb-server,q-ovn-metadata-agent
+
+# Configuration VNC pour console
+NOVA_VNC_ENABLED=True
+NOVNCPROXY_URL="http://$SERVICE_HOST:6080/vnc_lite.html"
+VNCSERVER_LISTEN=$HOST_IP
+VNCSERVER_PROXYCLIENT_ADDRESS=$VNCSERVER_LISTEN
+
+# Désactiver les services qui ne doivent pas tourner sur compute
+disable_service tempest
+```
+
