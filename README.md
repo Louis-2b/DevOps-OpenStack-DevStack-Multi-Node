@@ -97,7 +97,7 @@ Redémarrer :
 sudo systemctl restart networking
 ```
 
-## 3. SSH (A faire sur la machine controller)
+## 3. SSH (A faire sur la machine **contrôleur**)
 ###  Génération de la paire de clés SSH (Ed25519 recommandé pour la sécurité)
 
 ```bash
