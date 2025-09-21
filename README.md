@@ -17,7 +17,7 @@ Système d'exploitation : **Debian 12**.
 ```bash
 su -
 apt update -y && apt upgrade -y
-apt install sudo -y
+apt install sudo git -y
 ```
 
 ### Configurer sudo sans mot de passe
@@ -112,3 +112,20 @@ cat ~/.ssh/devstack.pub | ssh alcapone@192.168.1.41 "mkdir -p ~/.ssh && chmod 70
 # Tester la connexion
 ssh -i ~/.ssh/devstack alcapone@192.168.1.41
 ```
+
+### Téléchargement de DevStack
+
+```bash
+git clone https://opendev.org/openstack/devstack
+cd devstack
+```
+
+
+# Étapes d’installation
+
+## 1. Configuration du nœud contrôleur
+Le nœud contrôleur exécute les services principaux d’OpenStack (API, Keystone, Nova Scheduler, Neutron, etc.).
+
+### Créer le fichier de configuration local.conf
+
+```bash
