@@ -129,3 +129,32 @@ Le nœud contrôleur exécute les services principaux d’OpenStack (API, Keysto
 ### Créer le fichier de configuration local.conf
 
 ```bash
+nano local.conf
+
+
+[[local|localrc]]
+
+# Adresse IP du nœud contrôleur (celle de ta machine sur le LAN)
+HOST_IP=192.168.1.50
+
+# Plage réseau interne pour les instances (ne doit pas entrer en conflit avec ton LAN)
+FIXED_RANGE=10.0.1.0/24
+
+# Plage d’adresses IP flottantes (doit appartenir au même réseau que HOST_IP)
+FLOATING_RANGE=192.168.1.120/24
+
+# Emplacement du fichier de logs
+LOGFILE=/opt/stack/logs/stack.sh.log
+
+# Mot de passe admin
+ADMIN_PASSWORD=< VOTRE_MOT_DE_PASSE >
+
+# Mot de passe DB
+DATABASE_PASSWORD=< VOTRE_MOT_DE_PASSE >
+
+# Mot de passe RabbitMQ
+RABBIT_PASSWORD=< VOTRE_MOT_DE_PASSE >
+
+# Mot de passe services
+SERVICE_PASSWORD=< VOTRE_MOT_DE_PASSE >
+```
