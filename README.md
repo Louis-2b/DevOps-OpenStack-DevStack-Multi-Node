@@ -12,8 +12,7 @@ Système d'exploitation : **Debian 12**.
 
 ---
 
-## 1. Préparation du système
-A faire sur les **2 machines (1 contrôleur + 1 compute)**
+## 1. Préparation du système (A faire sur les **2 machines (1 contrôleur + 1 compute))
 
 ```bash
 su -
@@ -96,3 +95,17 @@ Redémarrer :
 ```bash
 # Appliquer la nouvelle configuration
 sudo systemctl restart networking
+```
+
+## 3. SSH (A faire sur la machine controller)
+###  Génération de la paire de clés SSH (Ed25519 recommandé pour la sécurité)
+
+```bash
+ssh-keygen -t ed25519 -C "devstack" -f ~/.ssh/devstack
+```
+
+### Copier la clé publique vers la machine compute
+
+```bash
+cat ~/.ssh/devstack.pub | ssh alcapone@192.168.1.41 "mkdir -p ~/.ssh && chmod 700 ~/.ssh && cat >> ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys"
+```
