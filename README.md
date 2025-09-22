@@ -7,7 +7,7 @@ Ce guide documente les étapes complètes pour préparer un serveur, installer e
 ### Matériel :
 
 Minimum **2 machines (1 contrôleur + 1 compute)**.
-Chaque machine doit avoir au moins **10 Go de RAM ou plus**, **8 cœurs CPU ou plus**, deux espace disque sur la machine contrôleur et un espace disque sur la machine compute  **(100 Go recommandé ou plus)** et deux cartes réseaux en mode **Bridged**.
+Chaque machine doit avoir au moins **10 Go de RAM ou plus**, **8 cœurs CPU ou plus**, deux espace disque sur la machine **contrôleur** et un espace disque sur la machine **compute**  **(100 Go recommandé ou plus)** et deux cartes réseaux en mode **Bridged**.
 Système d'exploitation : **Debian 12**.
 
 ---
