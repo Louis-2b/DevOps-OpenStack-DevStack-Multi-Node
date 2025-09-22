@@ -359,3 +359,37 @@ Chaque utilisateur est membre d’un projet :
 Un **projet** (ou tenant) est comme un **“compartiment”** ou une **“organisation”** qui contient des ressources (VM, volumes, réseaux…).
 Un **utilisateur** appartient à un projet et a un rôle qui définit ce qu’il peut faire (admin, member…).
 
+```bash
+nano create_users.sh
+
+#!/bin/bash
+. /home/alcapone/devstack/openrc admin admin
+
+# Créer utilisateur diegosoda
+NAME=diegosoda
+PASSWORD=adminuser
+PROJECT=devops
+openstack project create $PROJECT
+openstack user create $NAME --password=$PASSWORD --project $PROJECT
+openstack role add Member --user $NAME --project $PROJECT
+
+# Créer utilisateur tubie
+NAME=tubie
+PASSWORD=adminuser
+PROJECT=infra
+openstack project create $PROJECT
+openstack user create $NAME --password=$PASSWORD --project $PROJECT
+openstack role add Member --user $NAME --project $PROJECT
+```
+
+### Exécuter le script
+
+```bash
+# Rendre le script exécutable
+chomd +x create_users.sh
+
+# # Exécutez le script create_users.sh
+./create_users.sh
+```
+
+
