@@ -293,3 +293,12 @@ disable_service mysql rabbit key
 disable_service q-svc q-dhcp q-l3 q-meta
 ```
 
+### Lancer l’installation
+
+```bash
+# Exécutez le script stack.sh
+./stack.sh
+
+# Ce script télécharge, configure et déploie les services OpenStack sur le nœud compute. Cela peut prendre du temps (10-30 minutes selon la machine).
+```
+
