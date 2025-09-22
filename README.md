@@ -196,7 +196,6 @@ enable_service c-api c-vol c-sch c-bak
 # Configurer le backend LVM pour Cinder
 CINDER_ENABLED_BACKENDS=lvm:cinder-volumes
 VOLUME_GROUP=cinder-volumes
-VOLUME_BACKING_FILE_SIZE=50000M
 
 # Désactiver les services qui ne doivent pas tourner sur le contrôleur
 disable_service n-cpu q-agt tempest
