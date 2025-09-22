@@ -342,3 +342,20 @@ sudo rm -rf /etc/libvirt/qemu/inst*
 sudo virsh list | grep inst | awk '{print $1}' | xargs -n1 virsh destroy
 ```
 
+
+# Aller plus loin
+# Utilisateurs supplémentaires
+
+DevStack crée par défaut :
+
+- Deux utilisateurs : **admin (administrateur)** et **demo (utilisateur standard)**.
+- Deux projets : **admin** et **demo**.
+
+Chaque utilisateur est membre d’un projet :
+
+- **admin** → membre du projet **admin**
+- **demo** → membre du projet **demo**
+
+Un **projet** (ou tenant) est comme un **“compartiment”** ou une **“organisation”** qui contient des ressources (VM, volumes, réseaux…).
+Un **utilisateur** appartient à un projet et a un rôle qui définit ce qu’il peut faire (admin, member…).
+
