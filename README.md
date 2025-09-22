@@ -194,13 +194,30 @@ SERVICE_PASSWORD=labstack
 enable_service c-api c-vol c-sch c-bak
 
 # Configurer le backend LVM pour Cinder
-CINDER_ENABLED_BACKENDS=lvm:lvmdriver-1
-VOLUME_GROUP="cinder-volumes"
+CINDER_ENABLED_BACKENDS=lvm:cinder-volumes
+VOLUME_GROUP=cinder-volumes
 VOLUME_BACKING_FILE_SIZE=50000M
-
 
 # Désactiver les services qui ne doivent pas tourner sur le contrôleur
 disable_service n-cpu q-agt tempest
+
+# configuration du volume group pour cinder
+[[post-config|$CINDER_CONF]]
+[cinder-volumes]
+image_volume_cache_enabled = True
+volume_clear = zero
+lvm_type = auto
+target_prefix = iqn.2010-10.org.openstack:
+target_port = 3260
+target_protocol = iscsi
+target_helper = lioadm
+volume_group = cinder-volumes
+volume_driver = cinder.volume.drivers.lvm.LVMVolumeDriver
+volume_backend_name = cinder-volumes
+
+[DEFAULT]
+enabled_backends = cinder-volumes
+default_volume_type = cinder-volumes
 ```
 
 ### Lancer l’installation
