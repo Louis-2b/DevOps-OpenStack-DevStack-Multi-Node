@@ -386,7 +386,7 @@ openstack role add Member --user $NAME --project $PROJECT
 
 ```bash
 # Rendre le script exécutable
-chomd +x create_users.sh
+chmod +x create_users.sh
 
 # # Exécutez le script create_users.sh
 ./create_users.sh
