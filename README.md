@@ -111,7 +111,7 @@ sudo systemctl restart networking
 lsblk
 ```
 
-### Configuration LVM pour Cinder
+### Configuration LVM pour Cinder (A faire sur la machine contrôleur)
 
 ```bash
 sudo pvcreate /dev/sdb
