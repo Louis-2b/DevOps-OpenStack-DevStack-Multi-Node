@@ -302,3 +302,13 @@ disable_service q-svc q-dhcp q-l3 q-meta
 # Ce script télécharge, configure et déploie les services OpenStack sur le nœud compute. Cela peut prendre du temps (10-30 minutes selon la machine).
 ```
 
+### Étape suivante à tester
+Depuis le controller :
+
+```bash
+openstack service list
+openstack endpoint list
+openstack compute service list
+openstack network agent list
+```
+
