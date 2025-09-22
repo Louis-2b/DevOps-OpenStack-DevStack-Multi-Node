@@ -103,7 +103,7 @@ Redémarrer :
 sudo systemctl restart networking
 ```
 
-## 3. Stockage
+## 3. Stockage (A faire sur la machine contrôleur)
 
 ### Liste des disques
 
@@ -111,7 +111,7 @@ sudo systemctl restart networking
 lsblk
 ```
 
-### Configuration LVM pour Cinder (A faire sur la machine contrôleur)
+### Configuration LVM pour Cinder 
 
 ```bash
 sudo pvcreate /dev/sdb
