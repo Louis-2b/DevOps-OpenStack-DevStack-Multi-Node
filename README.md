@@ -7,7 +7,7 @@ Ce guide documente les étapes complètes pour préparer un serveur, installer e
 ### Matériel :
 
 Minimum **2 machines (1 contrôleur + 1 compute)**.
-Chaque machine doit avoir au moins **10 Go de RAM**, **8 cœurs CPU**, et un espace disque suffisant **(100 Go recommandé)**.
+Chaque machine doit avoir au moins **10 Go de RAM ou plus**, **8 cœurs CPU ou plus**, deux espace disque de **(100 Go recommandé ou plus)** et deux cartes réseaux en mode **Bridged**.
 Système d'exploitation : **Debian 12**.
 
 ---
@@ -88,6 +88,12 @@ iface ens33 inet static
     address 192.168.1.50/24
     gateway 192.168.1.254
     dns-nameservers 8.8.8.8 8.8.4.4
+
+# Interface physique pour le bridge externe (ens34) - pas d'IP
+allow-hotplug ens34
+iface ens34 inet manual
+    up ip link set dev $IFACE up
+    down ip link set dev $IFACE down    
 ```
 
 Redémarrer :
@@ -97,7 +103,23 @@ Redémarrer :
 sudo systemctl restart networking
 ```
 
-## 3. SSH (A faire sur la machine contrôleur)
+## 3. Stockage
+
+### Liste des disques
+
+```bash
+lsblk
+```
+
+### Configuration LVM pour Cinder
+
+```bash
+sudo pvcreate /dev/sdb
+sudo vgcreate cinder-volumes /dev/sdb
+sudo vgs
+```
+
+## 4. SSH (A faire sur la machine contrôleur)
 ###  Génération de la paire de clés SSH (Ed25519 recommandé pour la sécurité)
 
 ```bash
