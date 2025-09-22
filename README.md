@@ -173,6 +173,7 @@ FLAT_INTERFACE=ens34
 
 # Emplacement du fichier de logs
 LOGFILE=/opt/stack/logs/stack.sh.log
+LOGDAYS=2
 
 # Configuration multi-nœud
 MULTI_HOST=1
@@ -235,16 +236,26 @@ nano local.conf
 [[local|localrc]]
 
 # Adresse IP du nœud compute (celle de ta machine sur le LAN)
-HOST_IP=192.168.1.41
+HOST_IP=192.168.1.42
 
 # Plage réseau interne pour les instances (ne doit pas entrer en conflit avec ton LAN)
-FIXED_RANGE=10.0.1.0/24
+FIXED_RANGE=10.0.1.0/20
 
 # Plage d’adresses IP flottantes (doit appartenir au même réseau que HOST_IP)
-FLOATING_RANGE=192.168.1.120/24
+FLOATING_RANGE=192.168.1.120/25
+
+# interface reliée au LAN externe (pas d’IP assignée directement)
+PUBLIC_INTERFACE=ens34
+
+# utilisée par Neutron pour le réseau provider
+FLAT_INTERFACE=ens34
 
 # Emplacement du fichier de logs
 LOGFILE=/opt/stack/logs/stack.sh.log
+LOGDAYS=2
+
+# Configuration multi-nœud
+MULTI_HOST=1
 
 # Mots de passe (doivent correspondre à ceux du contrôleur)
 ADMIN_PASSWORD=adminuser
@@ -256,7 +267,7 @@ SERVICE_PASSWORD=labstack
 DATABASE_TYPE=mysql
 
 # Adresse IP du nœud contrôleur
-SERVICE_HOST=192.168.1.50
+SERVICE_HOST=192.168.1.121
 
 # Hôtes des services centraux (sur le contrôleur)
 MYSQL_HOST=$SERVICE_HOST
@@ -264,7 +275,7 @@ RABBIT_HOST=$SERVICE_HOST
 GLANCE_HOSTPORT=$SERVICE_HOST:9292
 
 # Services activés sur le nœud compute
-ENABLED_SERVICES=n-cpu,c-vol,placement-client,ovn-controller,ovs-vswitchd,ovsdb-server,q-ovn-metadata-agent
+ENABLED_SERVICES=n-cpu,placement-client,ovn-controller,ovs-vswitchd,ovsdb-server,q-ovn-metadata-agent
 
 # Configuration VNC pour console
 NOVA_VNC_ENABLED=True
@@ -274,5 +285,11 @@ VNCSERVER_PROXYCLIENT_ADDRESS=$VNCSERVER_LISTEN
 
 # Désactiver les services qui ne doivent pas tourner sur compute
 disable_service tempest
+disable_service n-api n-sch n-cond n-obj n-crt
+disable_service c-api c-vol c-sch c-bak
+disable_service g-api g-reg
+disable_service horizon
+disable_service mysql rabbit key
+disable_service q-svc q-dhcp q-l3 q-meta
 ```
 
