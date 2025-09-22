@@ -312,3 +312,16 @@ openstack compute service list
 openstack network agent list
 ```
 
+
+## Nettoyage après DevStack
+Arrêter OpenStack est aussi simple il suffit d’exécuter le shscript inclus :
+
+```bash
+./unstack.sh
+./clean.sh
+
+# Il arrive que les instances en cours d'exécution ne soient pas nettoyées. DevStack tente de le faire lors de son exécution, mais il arrive que cette opération doive être effectuée manuellement :
+sudo rm -rf /etc/libvirt/qemu/inst*
+sudo virsh list | grep inst | awk '{print $1}' | xargs -n1 virsh destroy
+```
+
