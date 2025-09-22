@@ -85,7 +85,7 @@ sudo nano /etc/network/interfaces
 # Interface physique pour le management (ens33)
 allow-hotplug ens33
 iface ens33 inet static
-    address 192.168.1.50/24
+    address 192.168.1.121/24
     gateway 192.168.1.254
     dns-nameservers 8.8.8.8 8.8.4.4
 
@@ -157,31 +157,49 @@ nano local.conf
 [[local|localrc]]
 
 # Adresse IP du nœud contrôleur (celle de ta machine sur le LAN)
-HOST_IP=192.168.1.50
+HOST_IP=192.168.1.121
 
 # Plage réseau interne pour les instances (ne doit pas entrer en conflit avec ton LAN)
-FIXED_RANGE=10.0.1.0/24
+FIXED_RANGE=10.0.1.0/20
 
 # Plage d’adresses IP flottantes (doit appartenir au même réseau que HOST_IP)
-FLOATING_RANGE=192.168.1.120/24
+FLOATING_RANGE=192.168.1.120/25
+
+# interface reliée au LAN externe (pas d’IP assignée directement)
+PUBLIC_INTERFACE=ens34
+
+# utilisée par Neutron pour le réseau provider
+FLAT_INTERFACE=ens34
 
 # Emplacement du fichier de logs
 LOGFILE=/opt/stack/logs/stack.sh.log
 
+# Configuration multi-nœud
+MULTI_HOST=1
+
 # Mot de passe admin
-ADMIN_PASSWORD=< VOTRE_MOT_DE_PASSE >
+ADMIN_PASSWORD=adminuser
 
 # Mot de passe DB
-DATABASE_PASSWORD=< VOTRE_MOT_DE_PASSE >
+DATABASE_PASSWORD=labstack
 
 # Mot de passe RabbitMQ
-RABBIT_PASSWORD=< VOTRE_MOT_DE_PASSE >
+RABBIT_PASSWORD=labstack
 
 # Mot de passe services
-SERVICE_PASSWORD=< VOTRE_MOT_DE_PASSE >
+SERVICE_PASSWORD=labstack
 
-# Désactiver les services qui ne doivent pas tourner sur compute 
-disable_service tempest
+# Activer les services Cinder
+enable_service c-api c-vol c-sch c-bak
+
+# Configurer le backend LVM pour Cinder
+CINDER_ENABLED_BACKENDS=lvm:lvmdriver-1
+VOLUME_GROUP="cinder-volumes"
+VOLUME_BACKING_FILE_SIZE=50000M
+
+
+# Désactiver les services qui ne doivent pas tourner sur le contrôleur
+disable_service n-cpu q-agt tempest
 ```
 
 ### Lancer l’installation
