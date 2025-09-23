@@ -421,27 +421,6 @@ ls -la ~/.config/openstack/clouds.yaml
 
 # Vérifier le contenu
 cat ~/.config/openstack/clouds.yaml
-
-# This is a clouds.yaml file, which can be used by OpenStack tools as a source
-# of configuration on how to connect to a cloud. If this is your only cloud,
-# just put this file in ~/.config/openstack/clouds.yaml and tools like
-# python-openstackclient will just work with no further config. (You will need
-# to add your password to the auth section)
-# If you have more than one cloud account, add the cloud entry to the clouds
-# section of your existing file and you can refer to them by name with
-# OS_CLOUD=openstack or --os-cloud=openstack
-clouds:
-  openstack:
-    auth:
-      auth_url: http://192.168.1.121/identity
-      username: "diegosoda"
-      password: "adminuser"
-      project_id: 6707d1f923504893ba7284521332785f
-      project_name: "devops"
-      user_domain_name: "Default"
-    region_name: "RegionOne"
-    interface: "public"
-    identity_api_version: 3
 ```
 
 ### Installer le client OpenStack
