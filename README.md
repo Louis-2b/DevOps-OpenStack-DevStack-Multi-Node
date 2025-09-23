@@ -409,6 +409,8 @@ mkdir -p ~/.config/openstack
 
 # Depuis Windows (PowerShell ou CMD)
 scp "C:\Users\steph\Downloads\clouds.yaml" alcapone@192.168.1.121:~/.config/openstack/clouds.yaml
+
+scp "C:\Users\steph\Downloads\devops-openrc.sh" alcapone@192.168.1.121:~
 ```
 
 ### 3. Vérification finale
@@ -441,5 +443,18 @@ clouds:
     interface: "public"
     identity_api_version: 3
 ```
+
+### Installer le client OpenStack
+
+```bash
+# Vérifiez la version de Python :
+# Assurez-vous d'utiliser une version de Python compatible (par exemple, Python 3.6 ou supérieur). Vérifiez avec :
+python3 --version
+
+# Installez python-openstackclient
+python3 -m venv alcapone
+source alcapone/bin/activate
+pip install --upgrade pip
+pip install python-openstackclient
 
 
