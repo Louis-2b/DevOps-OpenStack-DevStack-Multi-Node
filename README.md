@@ -445,6 +445,10 @@ source alcapone/bin/activate
 
 # Redémarrer :
 Ctrl+D
+
+# Test maintenant
+echo "Cloud actuel: $OS_CLOUD"
+openstack token issue
 ```
 
 
