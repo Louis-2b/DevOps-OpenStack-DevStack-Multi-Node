@@ -392,4 +392,34 @@ chmod +x create_users.sh
 ./create_users.sh
 ```
 
+## 
+
+
+### 1. Via l'interface web Horizon
+
+- Connectez-vous à **Horizon** avec **chaque utilisateur**
+- Allez dans **Project → API Access**
+- Cliquez sur **Download OpenStack RC File → OpenStack clouds.yaml File**
+- Le fichier sera automatiquement généré avec les bonnes informations
+
+### 2. Où placer le fichier téléchargé
+
+```bash
+# Créer le répertoire de configuration
+mkdir -p ~/.config/openstack
+
+# Depuis Windows (PowerShell ou CMD)
+scp "C:\Users\steph\Downloads\clouds.yaml" alcapone@192.168.1.121:~/.config/openstack/clouds.yaml
+```
+
+### 3. Vérification finale
+
+```bash
+# Vérifier la présence du fichier
+ls -la ~/.config/openstack/clouds.yaml
+
+# Vérifier le contenu
+cat ~/.config/openstack/clouds.yaml
+```
+
 
