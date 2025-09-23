@@ -435,6 +435,16 @@ python3 -m venv alcapone
 source alcapone/bin/activate
 pip install --upgrade pip
 pip install python-openstackclient
+
+# Variables d’environnement
+nano ~/.bashrc
+
+# Ajouter ceci à la fin :
+export OS_CLOUD=diegosoda
+source alcapone/bin/activate
+
+# Redémarrer :
+Ctrl+D
 ```
 
 
