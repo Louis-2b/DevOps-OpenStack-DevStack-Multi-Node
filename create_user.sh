@@ -27,49 +27,79 @@ openstack role add admin --user $NAME --project $PROJECT
 
 ############################################################################################################
 
-# --- Module Terraform pour déployer un HAproxy DGFIP sur OpenStack ----
-
+# --- Module Terraform pour déployer un HAProxy DGFIP sur OpenStack ----
+# Ce module installe et configure une ou plusieurs instances HAProxy
+# en respectant les standards DGFIP d'infrastructure et de sécurité.
+# Version du module figée pour garantir la reproductibilité et la traçabilité des déploiements.
 
 module "dgfip_haproxy_outillage" {
-  # Source du module : dépôt Git interne DGFIP avec version figée
-  source                       = "git::https://forge.dgfip.finances.rie.gouv.fr/dgfip/si1/dan-a2c/module-terraform-dgfip/networking/terraform-openstack-haproxy.git?ref=v2.3.0"
+  # Source du module : dépôt Git interne DGFIP avec version explicitement figée
+  # 🔒 Fixer la version évite les modifications involontaires dues à des mises à jour du module.
+  source = "git::https://forge.dgfip.finances.rie.gouv.fr/dgfip/si1/dan-a2c/module-terraform-dgfip/networking/terraform-openstack-haproxy.git?ref=v2.3.0"
 
-  # Nom de l'image (système d’exploitation) utilisée pour le haproxy
-  # À paramétrer via une variable pour faciliter le changement d’image selon l’environnement
-  image_name                   = var.haproxy_image_name
+  # --- Paramètres d'image et d’environnement ---
 
-  # Préfixe du projet ou de la plateforme
-  # Permet de distinguer les environnements
-  pf_prefixe                   = var.pf_prefixe
+  # Nom de l'image (OS) utilisée pour l'instance HAProxy.
+  # 💡 Paramétrée par variable pour gérer différents environnements (ex : Debian, Rocky, Ubuntu).
+  image_name = var.haproxy_image_name
 
-  # Phase du déploiement
-  # Facilite la gestion des ressources multi-environnements
-  phase                        = var.phase
+  # Préfixe du projet / plateforme
+  # 🧩 Permet d’identifier facilement les ressources liées à un environnement (ex : a2c-dev, a2c-prod).
+  pf_prefixe = var.pf_prefixe
+
+  # Phase de déploiement (ex : dev, recette, prod)
+  # 🧱 Sert à isoler les environnements et à gérer le cycle de vie des déploiements.
+  phase = var.phase
 
 
-  server_count                 = var.haproxy_server_count
+  # --- Configuration de la machine ---
 
-  # Type de machine OpenStack (CPU/RAM)
-  # Choisir des flavors adaptés à la charge attendue.
-  flavor_name                  = var.haproxy_flavor_name
+  # Nombre d'instances HAProxy à déployer.
+  # ⚙️ Utile pour le scaling et la haute disponibilité (actif/passif ou actif/actif).
+  server_count = var.haproxy_server_count
 
-  # Paire de clés SSH autorisée pour l’accès administrateur au haproxy
-  # À générer et gérer en dehors du module pour éviter de stocker des clés dans le code
-  key_pair                     = var.key_pair
+  # Type de machine (flavor OpenStack)
+  # 🧮 Adapter en fonction de la charge et du trafic attendu.
+  flavor_name = var.haproxy_flavor_name
 
-  # Réseau d’administration interne où le haproxy sera connecté
-  admin_network_id             = data.openstack_networking_network_v2.admin_network.id
+  # Paire de clés SSH autorisée pour l’administration du HAProxy.
+  # 🔐 Toujours générer et gérer cette clé hors du dépôt Terraform.
+  key_pair = var.key_pair
 
-  # Règles de sécurité spécifiques au haproxy
-  # Définies dans un objet variable pour gérer finement les accès (SSH, ICMP, etc.)
-  admin_sg_haproxy_rules       = var.admin_sg_haproxy_rules
 
-  
-  pub_network_id               = data.openstack_networking_network_v2.pub_network.id
+  # --- Réseaux et sécurité ---
+
+  # Réseau interne d’administration (back-end, supervision, SSH)
+  admin_network_id = data.openstack_networking_network_v2.admin_network.id
+
+  # Règles de sécurité spécifiques au HAProxy
+  # 🔒 Gérer ces règles via des variables pour les adapter à chaque environnement.
+  admin_sg_haproxy_rules = var.admin_sg_haproxy_rules
+
+  # Réseau public de publication (front-end)
+  pub_network_id = data.openstack_networking_network_v2.pub_network.id
+
+  # Pool d’adresses IP flottantes pour la publication externe.
+  # 🌐 Fournit l’accès depuis l’extérieur du réseau administratif.
   publication_floating_ip_pool = var.pub_external_network_name
-  publication_fixed_fip        = [data.openstack_networking_floatingip_v2.haproxy_ip.address]
-  servergroup_az1_id           = var.servergroup_az1_id
-  servergroup_az2_id           = var.servergroup_az2_id
-  vips_pub                     = var.haproxy_vips_pub
-  extra_disks                  = var.haproxy_extra_disks
+
+  # Adresse IP flottante fixe (si existante)
+  # 🧭 Garantit la stabilité réseau entre déploiements.
+  publication_fixed_fip = [data.openstack_networking_floatingip_v2.haproxy_ip.address]
+
+
+  # --- Haute disponibilité et stockage ---
+
+  # Groupes de serveurs pour les zones de disponibilité (AZ)
+  # 🧠 Permet de répartir les instances HAProxy sur plusieurs AZ pour tolérance de panne.
+  servergroup_az1_id = var.servergroup_az1_id
+  servergroup_az2_id = var.servergroup_az2_id
+
+  # Adresses IP virtuelles publiques (VIPs)
+  # 🎯 Utilisées pour le failover ou le load balancing entre les instances HAProxy.
+  vips_pub = var.haproxy_vips_pub
+
+  # Disques additionnels (optionnels)
+  # 💾 Peut servir pour la journalisation, la configuration ou le stockage temporaire.
+  extra_disks = var.haproxy_extra_disks
 }
