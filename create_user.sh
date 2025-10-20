@@ -27,79 +27,49 @@ openstack role add admin --user $NAME --project $PROJECT
 
 ############################################################################################################
 
-# --- Module Terraform pour déployer un HAProxy DGFIP sur OpenStack ----
-# Ce module installe et configure une ou plusieurs instances HAProxy
-# en respectant les standards DGFIP d'infrastructure et de sécurité.
-# Version du module figée pour garantir la reproductibilité et la traçabilité des déploiements.
+module "dgfip_network_secgroup_monitoring_admin" {
+  source               = "git::https://forge.dgfip.finances.rie.gouv.fr/dgfip/si1/dan-a2c/module-terraform-dgfip/networking/terraform-openstack-secgroup.git?ref=v1.0.4"
+  pf_prefixe           = var.pf_prefixe
+  phase                = var.phase
+  sg_objet             = "admin-${var.monitoring_group_name}"
+  sg_description       = var.admin_sg_description
+  sg_rules             = var.admin_sg_monitoring_rules
+  delete_default_rules = var.delete_default_rules
+}
 
-module "dgfip_haproxy_outillage" {
-  # Source du module : dépôt Git interne DGFIP avec version explicitement figée
-  # 🔒 Fixer la version évite les modifications involontaires dues à des mises à jour du module.
-  source = "git::https://forge.dgfip.finances.rie.gouv.fr/dgfip/si1/dan-a2c/module-terraform-dgfip/networking/terraform-openstack-haproxy.git?ref=v2.3.0"
-
-  # --- Paramètres d'image et d’environnement ---
-
-  # Nom de l'image (OS) utilisée pour l'instance HAProxy.
-  # 💡 Paramétrée par variable pour gérer différents environnements (ex : Debian, Rocky, Ubuntu).
-  image_name = var.haproxy_image_name
-
-  # Préfixe du projet / plateforme
-  # 🧩 Permet d’identifier facilement les ressources liées à un environnement (ex : a2c-dev, a2c-prod).
-  pf_prefixe = var.pf_prefixe
-
-  # Phase de déploiement (ex : dev, recette, prod)
-  # 🧱 Sert à isoler les environnements et à gérer le cycle de vie des déploiements.
-  phase = var.phase
-
-
-  # --- Configuration de la machine ---
-
-  # Nombre d'instances HAProxy à déployer.
-  # ⚙️ Utile pour le scaling et la haute disponibilité (actif/passif ou actif/actif).
-  server_count = var.haproxy_server_count
-
-  # Type de machine (flavor OpenStack)
-  # 🧮 Adapter en fonction de la charge et du trafic attendu.
-  flavor_name = var.haproxy_flavor_name
-
-  # Paire de clés SSH autorisée pour l’administration du HAProxy.
-  # 🔐 Toujours générer et gérer cette clé hors du dépôt Terraform.
-  key_pair = var.key_pair
-
-
-  # --- Réseaux et sécurité ---
-
-  # Réseau interne d’administration (back-end, supervision, SSH)
-  admin_network_id = data.openstack_networking_network_v2.admin_network.id
-
-  # Règles de sécurité spécifiques au HAProxy
-  # 🔒 Gérer ces règles via des variables pour les adapter à chaque environnement.
-  admin_sg_haproxy_rules = var.admin_sg_haproxy_rules
-
-  # Réseau public de publication (front-end)
-  pub_network_id = data.openstack_networking_network_v2.pub_network.id
-
-  # Pool d’adresses IP flottantes pour la publication externe.
-  # 🌐 Fournit l’accès depuis l’extérieur du réseau administratif.
-  publication_floating_ip_pool = var.pub_external_network_name
-
-  # Adresse IP flottante fixe (si existante)
-  # 🧭 Garantit la stabilité réseau entre déploiements.
-  publication_fixed_fip = [data.openstack_networking_floatingip_v2.haproxy_ip.address]
-
-
-  # --- Haute disponibilité et stockage ---
-
-  # Groupes de serveurs pour les zones de disponibilité (AZ)
-  # 🧠 Permet de répartir les instances HAProxy sur plusieurs AZ pour tolérance de panne.
+module "dgfip_network_secgroup_monitoring_pub" {
+  source               = "git::https://forge.dgfip.finances.rie.gouv.fr/dgfip/si1/dan-a2c/module-terraform-dgfip/networking/terraform-openstack-secgroup.git?ref=v1.0.4"
+  pf_prefixe           = var.pf_prefixe
+  phase                = var.phase
+  sg_objet             = "pub-${var.monitoring_group_name}"
+  sg_description       = var.pub_sg_description
+  sg_rules             = var.pub_sg_monitoring_rules
+  delete_default_rules = var.delete_default_rules
+}
+module "dgfip_monitoring_outillage" {
+  source                 = "git::https://forge.dgfip.finances.rie.gouv.fr/dgfip/si1/dan-a2c/module-terraform-dgfip/calcul/terraform-openstack-instance.git?ref=v2.3.0"
+  image_name             = var.image_name
+  server_type            = var.monitoring_group_name
+  pf_prefixe             = var.pf_prefixe
+  phase                  = var.phase
+  flavor_name            = var.monitoring_flavor_name
+  key_pair               = var.key_pair
+  admin_network_id       = data.openstack_networking_network_v2.admin_network.id
+  pub_network_id         = data.openstack_networking_network_v2.pub_network.id
+  data_network_id        = data.openstack_networking_network_v2.data_network.id
+  is_admin_network       = true
+  is_pub_network         = true
+  is_data_network        = false
+  admin_floating_ip_pool = var.admin_external_network_name
+  admin_secgroup_id      = [module.dgfip_network_secgroup_monitoring_admin.secgroup_id]
+  pub_secgroup_id        = [module.dgfip_network_secgroup_monitoring_pub.secgroup_id]
+  extra_disks            = var.monitoring_extra_disks
   servergroup_az1_id = var.servergroup_az1_id
   servergroup_az2_id = var.servergroup_az2_id
-
-  # Adresses IP virtuelles publiques (VIPs)
-  # 🎯 Utilisées pour le failover ou le load balancing entre les instances HAProxy.
-  vips_pub = var.haproxy_vips_pub
-
-  # Disques additionnels (optionnels)
-  # 💾 Peut servir pour la journalisation, la configuration ou le stockage temporaire.
-  extra_disks = var.haproxy_extra_disks
+  metadata = {
+    group      = var.monitoring_group_name
+    pf_prefixe = var.pf_prefixe
+    phase      = var.phase
+  }
 }
+
