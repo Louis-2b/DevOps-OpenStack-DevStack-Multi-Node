@@ -407,6 +407,21 @@ RABBIT_PASSWORD=RabbitMQ!2025
 SERVICE_PASSWORD=ServiceP@ss2025!
 
 
+#=============================================================================
+# CONNEXION AUX SERVICES CENTRAUX
+#=============================================================================
+DATABASE_TYPE=mysql
+MYSQL_HOST=$SERVICE_HOST
+RABBIT_HOST=$SERVICE_HOST
+GLANCE_HOSTPORT=$SERVICE_HOST:9292
+Q_HOST=$SERVICE_HOST
+
+# Keystone
+KEYSTONE_AUTH_HOST=$SERVICE_HOST
+KEYSTONE_SERVICE_HOST=$SERVICE_HOST
+
+
+
 # Emplacement du fichier de logs
 LOGFILE=/opt/stack/logs/stack.sh.log
 LOGDAYS=2
