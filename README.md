@@ -218,6 +218,22 @@ volume_backend_name = cinder-volumes
 [DEFAULT]
 enabled_backends = cinder-volumes
 default_volume_type = cinder-volumes
+
+
+# === Designate (DNS as a Service) ===
+enable_plugin designate https://opendev.org/openstack/designate
+enable_service designate,designate-central,designate-api,designate-worker,designate-producer,designate-mdns
+
+# Dashboard DNS dans Horizon
+enable_plugin designate-dashboard https://opendev.org/openstack/designate-dashboard
+
+# Configuration Designate (optionnel)
+[[post-config|$DESIGNATE_CONF]]
+[service:api]
+listen = 0.0.0.0:9001
+
+[DEFAULT]
+debug = True
 ```
 
 ### Lancer l’installation
