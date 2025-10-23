@@ -419,7 +419,20 @@ Q_HOST=$SERVICE_HOST
 KEYSTONE_AUTH_HOST=$SERVICE_HOST
 KEYSTONE_SERVICE_HOST=$SERVICE_HOST
 
+#=============================================================================
+# SERVICES ACTIVÉS SUR COMPUTE
+#=============================================================================
+# Nova Compute (Hyperviseur)
+ENABLED_SERVICES=n-cpu
 
+# Placement Client
+ENABLED_SERVICES+=,placement-client
+
+# Neutron Agent (Réseau)
+ENABLED_SERVICES+=,q-agt
+
+# Monitoring Agent (optionnel)
+# ENABLED_SERVICES+=,ceilometer-acompute
 
 # Emplacement du fichier de logs
 LOGFILE=/opt/stack/logs/stack.sh.log
