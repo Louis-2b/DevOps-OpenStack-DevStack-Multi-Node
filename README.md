@@ -488,10 +488,9 @@ LOGDAYS=7
 VERBOSE=True
 LOG_COLOR=True
 
-
-#=============================================================================
+# +++++++++++++++++++++++++++++++++++++++++++++++
 # SERVICES DÉSACTIVÉS (EXÉCUTENT SUR CONTRÔLEUR)
-#=============================================================================
+# +++++++++++++++++++++++++++++++++++++++++++++++
 disable_service mysql rabbit key
 disable_service horizon
 disable_service g-api g-reg
@@ -501,21 +500,10 @@ disable_service q-svc q-dhcp q-l3 q-meta
 disable_service s-proxy s-object s-container s-account
 disable_service tempest
 
-#=============================================================================
+# +++++++++++++++++++++++++
 # CONFIGURATION MULTI-NŒUD
-#=============================================================================
+# +++++++++++++++++++++++++
 MULTI_HOST=1
-
-
-
-# Désactiver les services qui ne doivent pas tourner sur compute
-disable_service tempest
-disable_service n-api n-sch n-cond n-obj n-crt
-disable_service c-api c-vol c-sch c-bak
-disable_service g-api g-reg
-disable_service horizon
-disable_service mysql rabbit key
-disable_service q-svc q-dhcp q-l3 q-meta
 ```
 
 ### Lancer l’installation
