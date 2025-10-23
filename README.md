@@ -419,9 +419,9 @@ Q_HOST=$SERVICE_HOST
 KEYSTONE_AUTH_HOST=$SERVICE_HOST
 KEYSTONE_SERVICE_HOST=$SERVICE_HOST
 
-#=============================================================================
+# +++++++++++++++++++++++++++++
 # SERVICES ACTIVÉS SUR COMPUTE
-#=============================================================================
+# +++++++++++++++++++++++++++++
 # Nova Compute (Hyperviseur)
 ENABLED_SERVICES=n-cpu
 
@@ -434,6 +434,7 @@ ENABLED_SERVICES+=,q-agt
 # Monitoring Agent (optionnel)
 # ENABLED_SERVICES+=,ceilometer-acompute
 
+
 # Emplacement du fichier de logs
 LOGFILE=/opt/stack/logs/stack.sh.log
 LOGDAYS=2
@@ -441,18 +442,6 @@ LOGDAYS=2
 # Configuration multi-nœud
 MULTI_HOST=1
 
-# Type de base de données
-DATABASE_TYPE=mysql
-
-
-
-# Hôtes des services centraux (sur le contrôleur)
-MYSQL_HOST=$SERVICE_HOST
-RABBIT_HOST=$SERVICE_HOST
-GLANCE_HOSTPORT=$SERVICE_HOST:9292
-
-# Services activés sur le nœud compute
-ENABLED_SERVICES=n-cpu,placement-client,ovn-controller,ovs-vswitchd,ovsdb-server,q-ovn-metadata-agent
 
 # Configuration VNC pour console
 NOVA_VNC_ENABLED=True
