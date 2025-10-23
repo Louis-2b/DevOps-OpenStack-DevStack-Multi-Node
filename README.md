@@ -194,10 +194,9 @@ SERVICE_PASSWORD=ServiceP@ss2026!
 # Keystone (Identity)
 KEYSTONE_TONE_FORMAT=fermet
 
-
-#=============================================================================
+# +++++++++++++++++++++++++++
 # SERVICES CORE - CONTRÔLEUR
-#=============================================================================
+# +++++++++++++++++++++++++++
 # Base de données
 enable_service mysql
 
@@ -250,9 +249,6 @@ enable_service h-eng h-api h-api-cfn h-api-cw
 enable_plugin octavia https://opendev.org/openstack/octavia
 enable_plugin octavia-dashboard https://opendev.org/openstack/octavia-dashboard
 enable_service octavia o-cw o-hk o-hm o-api
-
-# Activer les services Cinder
-enable_service c-api c-vol c-sch c-bak
 
 # Barbican (Key Management)
 enable_plugin barbican https://opendev.org/openstack/barbican
