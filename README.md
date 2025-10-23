@@ -246,9 +246,9 @@ enable_service designate,designate-central,designate-api,designate-worker,design
 enable_plugin designate-dashboard https://opendev.org/openstack/designate-dashboard
 
 
-#=============================================================================
+# ++++++++++++++++++++++++++++++++
 # CONFIGURATION NEUTRON (RÉSEAU)
-#=============================================================================
+# ++++++++++++++++++++++++++++++++
 [[post-config|/$Q_PLUGIN_CONF_FILE]]
 [ml2]
 type_drivers = flat,vlan,vxlan
