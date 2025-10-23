@@ -5,7 +5,7 @@ Ce guide documente les étapes complètes pour préparer un serveur, installer e
 ## Prérequis généraux
 
 ### Ressources : Recommandations minimales par nœud :
-	• Contrôleur : 8 GB RAM, 4 vCPU, 100 GB disque, Compute : 16 GB RAM, 8 vCPU, 200 GB disque
+	• Contrôleur : 8 GB RAM, 4 vCPU, 100 GB disque; Compute : 16 GB RAM, 8 vCPU, 200 GB disque
 
 ---
 
