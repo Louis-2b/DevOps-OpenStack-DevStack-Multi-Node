@@ -435,6 +435,40 @@ ENABLED_SERVICES+=,q-agt
 # ENABLED_SERVICES+=,ceilometer-acompute
 
 
+#=============================================================================
+# CONFIGURATION NOVA COMPUTE
+#=============================================================================
+[[post-config|$NOVA_CONF]]
+[DEFAULT]
+# Type d'hyperviseur
+compute_driver = libvirt.LibvirtDriver
+vif_plugging_is_fatal = False
+vif_plugging_timeout = 300
+
+# VNC Configuration
+vnc_enabled = True
+novncproxy_base_url = http://$SERVICE_HOST:6080/vnc_lite.html
+vncserver_listen = 0.0.0.0
+vncserver_proxyclient_address = $HOST_IP
+
+[libvirt]
+virt_type = kvm  # ou 'qemu' si pas de support KVM
+cpu_mode = host-passthrough
+disk_cachemodes = network=writeback
+
+[neutron]
+auth_url = http://$SERVICE_HOST:5000
+auth_type = password
+project_domain_name = Default
+user_domain_name = Default
+region_name = RegionOne
+project_name = service
+username = neutron
+password = $SERVICE_PASSWORD
+
+
+
+
 # Emplacement du fichier de logs
 LOGFILE=/opt/stack/logs/stack.sh.log
 LOGDAYS=2
