@@ -15,21 +15,14 @@ Système d'exploitation : **Debian 12**.
 ## 1. Préparation du système (A faire sur les 2 machines 1 contrôleur + 1 compute)
 
 ```bash
-su -
-apt update -y && apt upgrade -y
-apt install sudo git -y
+sudo apt update -y && apt upgrade -y
 ```
 
-### Configurer sudo sans mot de passe
+### Créer l'utilisateur stack
 
 ```bash
-sudo visudo
-```
-Ajouter :
-
-```
-alcapone   ALL=(ALL:ALL) NOPASSWD:ALL
-```
+sudo useradd -s /bin/bash -d /opt/stack -m stack
+echo "stack ALL=(ALL) NOPASSWD: ALL" | sudo tee /etc/sudoers.d/stack
 
 ### Informations système
 
@@ -140,15 +133,20 @@ ssh -i ~/.ssh/devstack alcapone@192.168.1.41
 Avant de lancer DevStack, assure toi d'avoir :
 ```bash
 sudo apt install -y git python3-pip lvm2 thin-provisioning-tools python3-venv libpq-dev python3-dev
-
-
-sudo apt install -y git python3-pip python3-dev python3-venv \
-    libffi-dev gcc libssl-dev bridge-utils
+# ou :
+sudo apt install -y git python3-pip python3-dev python3-venv libffi-dev gcc libssl-dev bridge-utils
 ```
 
 ```bash
+# Se connecter en tant que stack
+sudo su - stack
+
+# Cloner DevStack
 git clone https://opendev.org/openstack/devstack
 cd devstack
+
+# Vérifier la connectivité réseau
+ping -c 3 192.168.1.121  # Depuis compute vers contrôleur
 ```
 
 
