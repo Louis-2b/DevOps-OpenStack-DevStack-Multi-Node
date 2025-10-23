@@ -434,10 +434,9 @@ ENABLED_SERVICES+=,q-agt
 # Monitoring Agent (optionnel)
 # ENABLED_SERVICES+=,ceilometer-acompute
 
-
-#=============================================================================
+# +++++++++++++++++++++++++++
 # CONFIGURATION NOVA COMPUTE
-#=============================================================================
+# +++++++++++++++++++++++++++
 [[post-config|$NOVA_CONF]]
 [DEFAULT]
 # Type d'hyperviseur
@@ -452,7 +451,7 @@ vncserver_listen = 0.0.0.0
 vncserver_proxyclient_address = $HOST_IP
 
 [libvirt]
-virt_type = kvm  # ou 'qemu' si pas de support KVM
+virt_type = qemu  # ou 'kvm' si pas de support QEMU
 cpu_mode = host-passthrough
 disk_cachemodes = network=writeback
 
