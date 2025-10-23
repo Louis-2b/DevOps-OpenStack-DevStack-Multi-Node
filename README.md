@@ -220,6 +220,13 @@ enabled_backends = cinder-volumes
 default_volume_type = cinder-volumes
 
 # === NEW ===
+
+# === Swift (Object Storage) ===
+enable_service s-proxy s-object s-container s-account
+SWIFT_HASH=1234567890abcdef1234567890abcdef
+SWIFT_REPLICAS=1
+SWIFT_DATA_DIR=$DEST/data/swift
+
 # === Designate (DNS as a Service) ===
 enable_plugin designate https://opendev.org/openstack/designate
 enable_service designate,designate-central,designate-api,designate-worker,designate-producer,designate-mdns
