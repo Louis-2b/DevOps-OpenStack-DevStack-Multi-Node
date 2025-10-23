@@ -161,8 +161,12 @@ nano local.conf
 
 [[local|localrc]]
 
+# +++++++++++++++++++++
+# CONFIGURATION RESEAU
+# +++++++++++++++++++++
 # Adresse IP du nœud contrôleur (celle de ta machine sur le LAN)
 HOST_IP=192.168.1.121
+SERVICE_HOST=192.168.1.121
 
 # Plage réseau interne pour les instances (ne doit pas entrer en conflit avec ton LAN)
 FIXED_RANGE=10.0.1.0/20
@@ -176,35 +180,54 @@ PUBLIC_INTERFACE=ens34
 # utilisée par Neutron pour le réseau provider
 FLAT_INTERFACE=ens34
 
+# DNS pour les instances
+DNS_SERVERS=8.8.8.8,8.8.4.4
+
+# +++++++++++++++++++++
+# LOGS & MO?ITORING
+# +++++++++++++++++++++
 # Emplacement du fichier de logs
 LOGFILE=/opt/stack/logs/stack.sh.log
-LOGDAYS=2
+LOGDAYS=7
+VERBOSE=True
+LOG_COLOR=True
+ENABLE_DEBUG_LOG_LEVEL=True
 
-# Configuration multi-nœud
+# +++++++++++++++++++++++++
+# CONFIGURATION MULTI-NOEUD
+# +++++++++++++++++++++++++
 MULTI_HOST=1
 
+# ++++++++++++++++++++++++++++
+# AUTHENTIFICATION & SECURITE
+# ++++++++++++++++++++++++++++
 # Mot de passe admin
-ADMIN_PASSWORD=adminuser
+ADMIN_PASSWORD=OpenStack2026!Secure
 
 # Mot de passe DB
-DATABASE_PASSWORD=labstack
+DATABASE_PASSWORD=DbP@ssw0rd2026!
 
 # Mot de passe RabbitMQ
-RABBIT_PASSWORD=labstack
+RABBIT_PASSWORD=RabbitMQ!2026
 
 # Mot de passe services
-SERVICE_PASSWORD=labstack
+SERVICE_PASSWORD=ServiceP@ss2026!
+
+# Keystone (Identity)
+KEYSTONE_TONE_FORMAT=fermet
 
 # Activer les services Cinder
 enable_service c-api c-vol c-sch c-bak
 
-# Configurer le backend LVM pour Cinder
+# Désactiver les services qui ne doivent pas tourner sur le contrôleur
+disable_service n-cpu q-agt tempest
+
+# +++++++++++++++++++++++++++++++++++++
+# CONFIGURATION CINDER (BLOCK STORAGE)
+# +++++++++++++++++++++++++++++++++++++
 CINDER_ENABLED_BACKENDS=lvm:cinder-volumes
 VOLUME_GROUP=cinder-volumes
 VOLUME_BACKING_FILE_SIZE=0
-
-# Désactiver les services qui ne doivent pas tourner sur le contrôleur
-disable_service n-cpu q-agt tempest
 
 # configuration du volume group pour cinder
 [[post-config|$CINDER_CONF]]
@@ -223,6 +246,7 @@ volume_backend_name = cinder-volumes
 [DEFAULT]
 enabled_backends = cinder-volumes
 default_volume_type = cinder-volumes
+storage_availability_zone = nova
 
 # === NEW ===
 
@@ -239,13 +263,27 @@ enable_service designate,designate-central,designate-api,designate-worker,design
 # Dashboard DNS dans Horizon
 enable_plugin designate-dashboard https://opendev.org/openstack/designate-dashboard
 
-# Configuration Designate (optionnel)
+# +++++++++++++++++++++++++++++++
+# CONFIGURATION DESIGNATE (DNS)
+# +++++++++++++++++++++++++++++++
 [[post-config|$DESIGNATE_CONF]]
 [service:api]
 listen = 0.0.0.0:9001
+api_base_uri = http://192.168.1.121:9001/
+auth_strategy = keystone
+enable_api_v2 = True
+enable_api_admin = True
 
 [DEFAULT]
 debug = True
+default_pool_id = ...........
+
+[service:worker]
+enabled = True
+notify = True
+
+[service:mdns]
+enabled = True
 ```
 
 ### Lancer l’installation
