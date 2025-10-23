@@ -489,7 +489,22 @@ VERBOSE=True
 LOG_COLOR=True
 
 
+#=============================================================================
+# SERVICES DÉSACTIVÉS (EXÉCUTENT SUR CONTRÔLEUR)
+#=============================================================================
+disable_service mysql rabbit key
+disable_service horizon
+disable_service g-api g-reg
+disable_service n-api n-cond n-sch n-novnc n-cauth
+disable_service c-api c-sch c-vol c-bak
+disable_service q-svc q-dhcp q-l3 q-meta
+disable_service s-proxy s-object s-container s-account
+disable_service tempest
 
+#=============================================================================
+# CONFIGURATION MULTI-NŒUD
+#=============================================================================
+MULTI_HOST=1
 
 
 
