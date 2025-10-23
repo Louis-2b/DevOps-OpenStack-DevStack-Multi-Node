@@ -221,6 +221,35 @@ enable_service designate,designate-central,designate-api,designate-worker,design
 # Dashboard DNS dans Horizon
 enable_plugin designate-dashboard https://opendev.org/openstack/designate-dashboard
 
+
+#=============================================================================
+# SERVICES ADDITIONNELS
+#=============================================================================
+# Swift (Object Storage)
+enable_service s-proxy s-object s-container s-account
+SWIFT_HASH=$(openssl rand -hex 16)
+SWIFT_REPLICAS=1
+SWIFT_DATA_DIR=$DEST/data/swift
+
+# Designate (DNS as a Service)
+enable_plugin designate https://opendev.org/openstack/designate
+enable_service designate,designate-central,designate-api,designate-worker,designate-producer,designate-mdns
+enable_plugin designate-dashboard https://opendev.org/openstack/designate-dashboard
+
+# Heat (Orchestration)
+enable_plugin heat https://opendev.org/openstack/heat
+enable_service h-eng h-api h-api-cfn h-api-cw
+
+# Octavia (Load Balancing)
+enable_plugin octavia https://opendev.org/openstack/octavia
+enable_plugin octavia-dashboard https://opendev.org/openstack/octavia-dashboard
+enable_service octavia o-cw o-hk o-hm o-api
+
+# Barbican (Key Management)
+enable_plugin barbican https://opendev.org/openstack/barbican
+enable_service barbican
+
+
 # +++++++++++++++++++++++++++++++++++++
 # CONFIGURATION CINDER (BLOCK STORAGE)
 # +++++++++++++++++++++++++++++++++++++
