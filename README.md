@@ -398,11 +398,9 @@ FLOATING_RANGE=192.168.1.120/25
 PUBLIC_INTERFACE=ens34
 FLAT_INTERFACE=ens34
 
-
-
-#=============================================================================
+# ++++++++++++++++++++++++++++++++++++++++++++
 # AUTHENTIFICATION (IDENTIQUES AU CONTRÔLEUR)
-#=============================================================================
+# ++++++++++++++++++++++++++++++++++++++++++++
 ADMIN_PASSWORD=OpenStack2025!Secure
 DATABASE_PASSWORD=DbP@ssw0rd2025!
 RABBIT_PASSWORD=RabbitMQ!2025
@@ -415,12 +413,6 @@ LOGDAYS=2
 
 # Configuration multi-nœud
 MULTI_HOST=1
-
-# Mots de passe (doivent correspondre à ceux du contrôleur)
-ADMIN_PASSWORD=adminuser
-DATABASE_PASSWORD=labstack
-RABBIT_PASSWORD=labstack
-SERVICE_PASSWORD=labstack
 
 # Type de base de données
 DATABASE_TYPE=mysql
