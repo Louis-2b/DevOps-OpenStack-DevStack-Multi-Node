@@ -245,6 +245,26 @@ enable_service designate,designate-central,designate-api,designate-worker,design
 # Dashboard DNS dans Horizon
 enable_plugin designate-dashboard https://opendev.org/openstack/designate-dashboard
 
+
+#=============================================================================
+# CONFIGURATION NEUTRON (RÉSEAU)
+#=============================================================================
+[[post-config|/$Q_PLUGIN_CONF_FILE]]
+[ml2]
+type_drivers = flat,vlan,vxlan
+tenant_network_types = vxlan
+mechanism_drivers = openvswitch,l2population
+extension_drivers = port_security
+
+[ml2_type_vxlan]
+vni_ranges = 1:1000
+
+[ml2_type_flat]
+flat_networks = public
+
+[ovs]
+bridge_mappings = public:br-ex
+
 # +++++++++++++++++++++++++++++++
 # CONFIGURATION DESIGNATE (DNS)
 # +++++++++++++++++++++++++++++++
