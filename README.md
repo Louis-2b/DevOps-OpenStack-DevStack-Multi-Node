@@ -183,21 +183,6 @@ FLAT_INTERFACE=ens34
 # DNS pour les instances
 DNS_SERVERS=8.8.8.8,8.8.4.4
 
-# +++++++++++++++++++++
-# LOGS & MO?ITORING
-# +++++++++++++++++++++
-# Emplacement du fichier de logs
-LOGFILE=/opt/stack/logs/stack.sh.log
-LOGDAYS=7
-VERBOSE=True
-LOG_COLOR=True
-ENABLE_DEBUG_LOG_LEVEL=True
-
-# +++++++++++++++++++++++++
-# CONFIGURATION MULTI-NOEUD
-# +++++++++++++++++++++++++
-MULTI_HOST=1
-
 # ++++++++++++++++++++++++++++
 # AUTHENTIFICATION & SECURITE
 # ++++++++++++++++++++++++++++
@@ -218,9 +203,6 @@ KEYSTONE_TONE_FORMAT=fermet
 
 # Activer les services Cinder
 enable_service c-api c-vol c-sch c-bak
-
-# Désactiver les services qui ne doivent pas tourner sur le contrôleur
-disable_service n-cpu q-agt tempest
 
 # +++++++++++++++++++++++++++++++++++++
 # CONFIGURATION CINDER (BLOCK STORAGE)
@@ -296,7 +278,25 @@ amp_flavor_id = 65
 [DEFAULT]
 debug = True
 
+# +++++++++++++++++++++
+# LOGS & MO?ITORING
+# +++++++++++++++++++++
+# Emplacement du fichier de logs
+LOGFILE=/opt/stack/logs/stack.sh.log
+LOGDAYS=7
+VERBOSE=True
+LOG_COLOR=True
+ENABLE_DEBUG_LOG_LEVEL=True
 
+# Désactiver les services qui ne doivent pas tourner sur le contrôleur
+disable_service n-cpu q-agt tempest
+disable_service tempest
+disable_service etcd3
+
+# +++++++++++++++++++++++++
+# CONFIGURATION MULTI-NOEUD
+# +++++++++++++++++++++++++
+MULTI_HOST=1
 ```
 
 ### Lancer l’installation
