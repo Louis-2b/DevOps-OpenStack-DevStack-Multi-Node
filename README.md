@@ -406,10 +406,9 @@ DATABASE_PASSWORD=DbP@ssw0rd2025!
 RABBIT_PASSWORD=RabbitMQ!2025
 SERVICE_PASSWORD=ServiceP@ss2025!
 
-
-#=============================================================================
+# ++++++++++++++++++++++++++++++++
 # CONNEXION AUX SERVICES CENTRAUX
-#=============================================================================
+# ++++++++++++++++++++++++++++++++
 DATABASE_TYPE=mysql
 MYSQL_HOST=$SERVICE_HOST
 RABBIT_HOST=$SERVICE_HOST
