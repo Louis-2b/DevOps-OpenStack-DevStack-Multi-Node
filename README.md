@@ -466,7 +466,28 @@ username = neutron
 password = $SERVICE_PASSWORD
 
 
+#=============================================================================
+# CONFIGURATION NEUTRON AGENT
+#=============================================================================
+[[post-config|/$Q_PLUGIN_CONF_FILE]]
+[ovs]
+bridge_mappings = public:br-ex
+local_ip = $HOST_IP
 
+[agent]
+tunnel_types = vxlan
+l2_population = True
+
+[securitygroup]
+firewall_driver = neutron.agent.linux.iptables_firewall.OVSHybridIptablesFirewallDriver
+
+#=============================================================================
+# LOGS
+#=============================================================================
+LOGFILE=/opt/stack/logs/stack.sh.log
+LOGDAYS=7
+VERBOSE=True
+LOG_COLOR=True
 
 # Emplacement du fichier de logs
 LOGFILE=/opt/stack/logs/stack.sh.log
