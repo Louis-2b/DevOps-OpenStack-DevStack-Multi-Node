@@ -10,6 +10,10 @@ Minimum **2 machines (1 contrôleur + 1 compute)**.
 Chaque machine doit avoir au moins **10 Go de RAM ou plus**, **8 cœurs CPU ou plus**, deux espace disque sur la machine **contrôleur** et un espace disque sur la machine **compute**  **(100 Go recommandé ou plus)** et deux cartes réseaux en mode **Bridged**.
 Système d'exploitation : **Debian 12**.
 
+1.	Ressources : Recommandations minimales par nœud :
+	•	Contrôleur : 8 GB RAM, 4 vCPU, 100 GB disque
+	•	Compute : 16 GB RAM, 8 vCPU, 200 GB disque
+
 ---
 
 ## 1. Préparation du système (A faire sur les 2 machines 1 contrôleur + 1 compute)
