@@ -140,6 +140,7 @@ ssh -i ~/.ssh/devstack alcapone@192.168.1.41
 Avant de lancer DevStack, assure toi d'avoir :
 ```bash
 sudo apt install -y python3-pip git lvm2 thin-provisioning-tools python3-venv
+```
 
 ```bash
 git clone https://opendev.org/openstack/devstack
