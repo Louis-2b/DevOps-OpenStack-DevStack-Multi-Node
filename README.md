@@ -465,10 +465,9 @@ project_name = service
 username = neutron
 password = $SERVICE_PASSWORD
 
-
-#=============================================================================
+# ++++++++++++++++++++++++++++
 # CONFIGURATION NEUTRON AGENT
-#=============================================================================
+# ++++++++++++++++++++++++++++
 [[post-config|/$Q_PLUGIN_CONF_FILE]]
 [ovs]
 bridge_mappings = public:br-ex
@@ -481,27 +480,18 @@ l2_population = True
 [securitygroup]
 firewall_driver = neutron.agent.linux.iptables_firewall.OVSHybridIptablesFirewallDriver
 
-#=============================================================================
+# +++++
 # LOGS
-#=============================================================================
+# +++++
 LOGFILE=/opt/stack/logs/stack.sh.log
 LOGDAYS=7
 VERBOSE=True
 LOG_COLOR=True
 
-# Emplacement du fichier de logs
-LOGFILE=/opt/stack/logs/stack.sh.log
-LOGDAYS=2
-
-# Configuration multi-nœud
-MULTI_HOST=1
 
 
-# Configuration VNC pour console
-NOVA_VNC_ENABLED=True
-NOVNCPROXY_URL="http://$SERVICE_HOST:6080/vnc_lite.html"
-VNCSERVER_LISTEN=$HOST_IP
-VNCSERVER_PROXYCLIENT_ADDRESS=$VNCSERVER_LISTEN
+
+
 
 # Désactiver les services qui ne doivent pas tourner sur compute
 disable_service tempest
