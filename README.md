@@ -284,6 +284,19 @@ notify = True
 
 [service:mdns]
 enabled = True
+
+#=============================================================================
+# CONFIGURATION OCTAVIA (LOAD BALANCER)
+#=============================================================================
+[[post-config|$OCTAVIA_CONF]]
+[controller_worker]
+amp_boot_network_list = $(neutron net-list | awk '/lb-mgmt-net/ {print $2}')
+amp_flavor_id = 65
+
+[DEFAULT]
+debug = True
+
+
 ```
 
 ### Lancer l’installation
