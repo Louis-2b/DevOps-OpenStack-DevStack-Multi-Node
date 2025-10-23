@@ -219,7 +219,7 @@ volume_backend_name = cinder-volumes
 enabled_backends = cinder-volumes
 default_volume_type = cinder-volumes
 
-
+# === NEW ===
 # === Designate (DNS as a Service) ===
 enable_plugin designate https://opendev.org/openstack/designate
 enable_service designate,designate-central,designate-api,designate-worker,designate-producer,designate-mdns
