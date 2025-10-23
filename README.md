@@ -385,19 +385,17 @@ nano local.conf
 
 [[local|localrc]]
 
+# +++++++++++++++++++++
+# CONFIGURATION RESEAU
+# +++++++++++++++++++++
 # Adresse IP du nœud compute (celle de ta machine sur le LAN)
 HOST_IP=192.168.1.42
+SERVICE_HOST=192.168.1.121  # Adresse IP du nœud contrôleur
 
-# Plage réseau interne pour les instances (ne doit pas entrer en conflit avec ton LAN)
+# réseau (identique au controleur)
 FIXED_RANGE=10.0.1.0/20
-
-# Plage d’adresses IP flottantes (doit appartenir au même réseau que HOST_IP)
 FLOATING_RANGE=192.168.1.120/25
-
-# interface reliée au LAN externe (pas d’IP assignée directement)
 PUBLIC_INTERFACE=ens34
-
-# utilisée par Neutron pour le réseau provider
 FLAT_INTERFACE=ens34
 
 # Emplacement du fichier de logs
@@ -416,8 +414,7 @@ SERVICE_PASSWORD=labstack
 # Type de base de données
 DATABASE_TYPE=mysql
 
-# Adresse IP du nœud contrôleur
-SERVICE_HOST=192.168.1.121
+
 
 # Hôtes des services centraux (sur le contrôleur)
 MYSQL_HOST=$SERVICE_HOST
