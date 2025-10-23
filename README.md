@@ -186,45 +186,17 @@ DNS_SERVERS=8.8.8.8,8.8.4.4
 # ++++++++++++++++++++++++++++
 # AUTHENTIFICATION & SECURITE
 # ++++++++++++++++++++++++++++
-# Mot de passe admin
 ADMIN_PASSWORD=OpenStack2026!Secure
-
-# Mot de passe DB
 DATABASE_PASSWORD=DbP@ssw0rd2026!
-
-# Mot de passe RabbitMQ
 RABBIT_PASSWORD=RabbitMQ!2026
-
-# Mot de passe services
 SERVICE_PASSWORD=ServiceP@ss2026!
 
 # Keystone (Identity)
 KEYSTONE_TONE_FORMAT=fermet
 
-# Activer les services Cinder
-enable_service c-api c-vol c-sch c-bak
-
-
-
-# === NEW ===
-
-# === Swift (Object Storage) ===
-enable_service s-proxy s-object s-container s-account
-SWIFT_HASH=1234567890abcdef1234567890abcdef
-SWIFT_REPLICAS=1
-SWIFT_DATA_DIR=$DEST/data/swift
-
-# === Designate (DNS as a Service) ===
-enable_plugin designate https://opendev.org/openstack/designate
-enable_service designate,designate-central,designate-api,designate-worker,designate-producer,designate-mdns
-
-# Dashboard DNS dans Horizon
-enable_plugin designate-dashboard https://opendev.org/openstack/designate-dashboard
-
-
-#=============================================================================
+# ++++++++++++++++++++++
 # SERVICES ADDITIONNELS
-#=============================================================================
+# ++++++++++++++++++++++
 # Swift (Object Storage)
 enable_service s-proxy s-object s-container s-account
 SWIFT_HASH=$(openssl rand -hex 16)
@@ -245,10 +217,12 @@ enable_plugin octavia https://opendev.org/openstack/octavia
 enable_plugin octavia-dashboard https://opendev.org/openstack/octavia-dashboard
 enable_service octavia o-cw o-hk o-hm o-api
 
+# Activer les services Cinder
+enable_service c-api c-vol c-sch c-bak
+
 # Barbican (Key Management)
 enable_plugin barbican https://opendev.org/openstack/barbican
 enable_service barbican
-
 
 # +++++++++++++++++++++++++++++++++++++
 # CONFIGURATION CINDER (BLOCK STORAGE)
