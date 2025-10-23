@@ -276,7 +276,7 @@ enable_api_admin = True
 
 [DEFAULT]
 debug = True
-default_pool_id = ...........
+default_pool_id = 794ccc2c-d751-44fe-b57f-8894c9f5c842
 
 [service:worker]
 enabled = True
