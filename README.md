@@ -194,6 +194,40 @@ SERVICE_PASSWORD=ServiceP@ss2026!
 # Keystone (Identity)
 KEYSTONE_TONE_FORMAT=fermet
 
+
+#=============================================================================
+# SERVICES CORE - CONTRÔLEUR
+#=============================================================================
+# Base de données
+enable_service mysql
+
+# Message Queue
+enable_service rabbit
+
+# Keystone (Identity)
+enable_service key
+
+# Horizon (Dashboard)
+enable_service horizon
+
+# Glance (Image Service)
+enable_service g-api g-reg
+
+# Nova (Compute Controller)
+enable_service n-api n-cond n-sch n-novnc n-cauth
+disable_service n-cpu  # Pas de compute sur contrôleur
+
+# Placement API
+enable_service placement-api placement-client
+
+# Neutron (Network Controller)
+enable_plugin neutron https://opendev.org/openstack/neutron
+enable_service q-svc q-dhcp q-meta q-l3
+disable_service q-agt  # Agent sur compute uniquement
+
+# Cinder (Block Storage Controller)
+enable_service c-api c-sch c-vol c-bak
+
 # ++++++++++++++++++++++
 # SERVICES ADDITIONNELS
 # ++++++++++++++++++++++
