@@ -11,8 +11,8 @@ Chaque machine doit avoir au moins **10 Go de RAM ou plus**, **8 cœurs CPU ou p
 Système d'exploitation : **Debian 12**.
 
 Ressources : Recommandations minimales par nœud :
-	•	Contrôleur : 8 GB RAM, 4 vCPU, 100 GB disque
-	•	Compute : 16 GB RAM, 8 vCPU, 200 GB disque
+	•	**Contrôleur : 8 GB RAM, 4 vCPU, 100 GB disque**
+	•	**Compute : 16 GB RAM, 8 vCPU, 200 GB disque**
 
 ---
 
