@@ -5,7 +5,7 @@ Ce guide documente les étapes complètes pour préparer un serveur, installer e
 ## Prérequis généraux
 
 ### Ressources : Recommandations minimales par nœud :
-	• Contrôleur : 8 GB RAM, 4 vCPU, 100 GB disque; Compute : 16 GB RAM, 8 vCPU, 200 GB disque
+Tout d'abord, configurez une machine virtuelle de votre choix avec au moins **8 Go de RAM** et **4 vCPU** **100 Go d'espace disque**. Assurez-vous qu'elle est à jour. Installez **Git** et tout autre outil de développement utile.
 
 ---
 
