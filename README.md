@@ -1,6 +1,6 @@
 # Déploiement OpenStack avec DevStack
 
-Ce guide documente les étapes complètes pour préparer un serveur, installer et déployer OpenStack en utilisant **DevStack** sur un **OS DEBIAN 12**.
+Ce guide documente les étapes complètes pour préparer un serveur, installer et déployer OpenStack en utilisant **DevStack** sur un **OS DEBIAN 12, 13**.
 
 ## Prérequis généraux
 
