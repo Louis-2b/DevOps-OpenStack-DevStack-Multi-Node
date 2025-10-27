@@ -186,10 +186,11 @@ DNS_SERVERS=8.8.8.8,8.8.4.4
 # ++++++++++++++++++++++++++++
 # AUTHENTIFICATION & SECURITE
 # ++++++++++++++++++++++++++++
-ADMIN_PASSWORD=OpenStack2026!Secure
-DATABASE_PASSWORD=DbP@ssw0rd2026!
-RABBIT_PASSWORD=RabbitMQ!2026
-SERVICE_PASSWORD=ServiceP@ss2026!
+ADMIN_PASSWORD=password
+DATABASE_PASSWORD=password
+RABBIT_PASSWORD=password
+SERVICE_PASSWORD=password
+SERVICE_TOKEN=password
 
 # Keystone (Identity)
 KEYSTONE_TONE_FORMAT=fermet
@@ -197,62 +198,55 @@ KEYSTONE_TONE_FORMAT=fermet
 # +++++++++++++++++++++++++++
 # SERVICES CORE - CONTRÔLEUR
 # +++++++++++++++++++++++++++
-# Base de données
-enable_service mysql
+# Pre-requisite
+ENABLED_SERVICES=rabbit,mysql,key
 
-# Message Queue
-enable_service rabbit
-
-# Keystone (Identity)
-enable_service key
-
-# Horizon (Dashboard)
-enable_service horizon
+# Horizon - activer pour l'interface graphique Web OpenStack
+ENABLED_SERVICES+=,horizon
 
 # Glance (Image Service)
-enable_service g-api g-reg
+ENABLED_SERVICES+=,g-api,g-reg
 
 # Nova (Compute Controller)
-enable_service n-api n-cond n-sch n-novnc n-cauth
-disable_service n-cpu  # Pas de compute sur contrôleur
-
-# Placement API
-enable_service placement-api placement-client
+ENABLED_SERVICES+=,n-api,n-crt,n-cpu,n-cond,n-sch,n-api-meta,n-sproxy,n-novnc n-cauth
+ENABLED_SERVICES+=,placement-api,placement-client
 
 # Neutron (Network Controller)
 enable_plugin neutron https://opendev.org/openstack/neutron
-enable_service q-svc q-dhcp q-meta q-l3
-disable_service q-agt  # Agent sur compute uniquement
+ENABLED_SERVICES+=,q-svc,q-agt,q-dhcp,q-l3,q-meta,neutron
 
 # Cinder (Block Storage Controller)
-enable_service c-api c-sch c-vol c-bak
+ENABLED_SERVICES+=,c-api,c-vol,c-sch
 
 # ++++++++++++++++++++++
 # SERVICES ADDITIONNELS
 # ++++++++++++++++++++++
 # Swift (Object Storage)
-enable_service s-proxy s-object s-container s-account
+ENABLED_SERVICES+=,s-proxy s-object s-container s-account
 SWIFT_HASH=$(openssl rand -hex 16)
 SWIFT_REPLICAS=1
 SWIFT_DATA_DIR=$DEST/data/swift
 
 # Designate (DNS as a Service)
 enable_plugin designate https://opendev.org/openstack/designate
-enable_service designate,designate-central,designate-api,designate-worker,designate-producer,designate-mdns
+ENABLED_SERVICES+=,designate,designate-central,designate-api,designate-worker,designate-producer,designate-mdns
 enable_plugin designate-dashboard https://opendev.org/openstack/designate-dashboard
 
 # Heat (Orchestration)
 enable_plugin heat https://opendev.org/openstack/heat
-enable_service h-eng h-api h-api-cfn h-api-cw
+ENABLED_SERVICES+=,h-eng h-api h-api-cfn h-api-cw
 
 # Octavia (Load Balancing)
 enable_plugin octavia https://opendev.org/openstack/octavia
-enable_plugin octavia-dashboard https://opendev.org/openstack/octavia-dashboard
-enable_service octavia o-cw o-hk o-hm o-api
+# Si vous activez Horizon, incluez le tableau de bord Octavia
+enable_plugin octavia-dashboard https://opendev.org/openstack/octavia-dashboard.git
+ENABLED_SERVICES+=,octavia,o-cw,o-hk,o-hm,o-api
 
 # Barbican (Key Management)
+# Si vous activez Barbican pour le déchargement TLS dans Octavia, incluez-le ici
 enable_plugin barbican https://opendev.org/openstack/barbican
-enable_service barbican
+# Barbican - Utilisé en option pour le déchargement TLS dans Octavia
+ENABLED_SERVICES+=,barbican
 
 # +++++++++++++++++++++++++++++++++++++
 # CONFIGURATION CINDER (BLOCK STORAGE)
@@ -335,17 +329,17 @@ debug = True
 # +++++++++++++++++++++
 # LOGS & MO?ITORING
 # +++++++++++++++++++++
-# Emplacement du fichier de logs
+# Enable Logging
 LOGFILE=/opt/stack/logs/stack.sh.log
-LOGDAYS=7
 VERBOSE=True
 LOG_COLOR=True
+LOGDAYS=7
 ENABLE_DEBUG_LOG_LEVEL=True
 
 # Désactiver les services qui ne doivent pas tourner sur le contrôleur
-disable_service n-cpu q-agt tempest
-disable_service tempest
-disable_service etcd3
+DISABLE_SERVICE+=,n-cpu q-agt tempest
+DISABLE_SERVICE+=,etcd3
+DISABLE_SERVICE+=,tempest
 
 # +++++++++++++++++++++++++
 # CONFIGURATION MULTI-NOEUD
