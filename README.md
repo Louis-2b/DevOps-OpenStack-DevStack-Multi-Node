@@ -395,10 +395,11 @@ FLAT_INTERFACE=ens34
 # ++++++++++++++++++++++++++++++++++++++++++++
 # AUTHENTIFICATION (IDENTIQUES AU CONTRÔLEUR)
 # ++++++++++++++++++++++++++++++++++++++++++++
-ADMIN_PASSWORD=OpenStack2025!Secure
-DATABASE_PASSWORD=DbP@ssw0rd2025!
-RABBIT_PASSWORD=RabbitMQ!2025
-SERVICE_PASSWORD=ServiceP@ss2025!
+ADMIN_PASSWORD=password
+DATABASE_PASSWORD=password
+RABBIT_PASSWORD=password
+SERVICE_PASSWORD=password
+SERVICE_TOKEN=password
 
 # ++++++++++++++++++++++++++++++++
 # CONNEXION AUX SERVICES CENTRAUX
@@ -417,7 +418,7 @@ KEYSTONE_SERVICE_HOST=$SERVICE_HOST
 # SERVICES ACTIVÉS SUR COMPUTE
 # +++++++++++++++++++++++++++++
 # Nova Compute (Hyperviseur)
-ENABLED_SERVICES=n-cpu
+ENABLED_SERVICES+=,n-cpu
 
 # Placement Client
 ENABLED_SERVICES+=,placement-client
@@ -477,6 +478,7 @@ firewall_driver = neutron.agent.linux.iptables_firewall.OVSHybridIptablesFirewal
 # +++++
 # LOGS
 # +++++
+# Enable Logging
 LOGFILE=/opt/stack/logs/stack.sh.log
 LOGDAYS=7
 VERBOSE=True
@@ -485,14 +487,14 @@ LOG_COLOR=True
 # +++++++++++++++++++++++++++++++++++++++++++++++
 # SERVICES DÉSACTIVÉS (EXÉCUTENT SUR CONTRÔLEUR)
 # +++++++++++++++++++++++++++++++++++++++++++++++
-disable_service mysql rabbit key
-disable_service horizon
-disable_service g-api g-reg
-disable_service n-api n-cond n-sch n-novnc n-cauth
-disable_service c-api c-sch c-vol c-bak
-disable_service q-svc q-dhcp q-l3 q-meta
-disable_service s-proxy s-object s-container s-account
-disable_service tempest
+DISABLE_SERVICE+=,mysql rabbit key
+DISABLE_SERVICE+=,horizon
+DISABLE_SERVICE+=,g-api g-reg
+DISABLE_SERVICE+=,n-api n-cond n-sch n-novnc n-cauth
+DISABLE_SERVICE+=,c-api c-sch c-vol c-bak
+DISABLE_SERVICE+=,q-svc q-dhcp q-l3 q-meta
+DISABLE_SERVICE+=,s-proxy s-object s-container s-account
+DISABLE_SERVICE+=,tempest
 
 # +++++++++++++++++++++++++
 # CONFIGURATION MULTI-NŒUD
