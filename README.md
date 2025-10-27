@@ -174,17 +174,19 @@ HOST_IP=192.168.1.121
 SERVICE_HOST=192.168.1.121
 
 # Plage réseau interne (pour les instances)
-FIXED_RANGE=10.0.1.0/20
+FIXED_RANGE=10.0.1.0/24
+FIXED_NETWORK_SIZE=256
 
 # Plage d’adresses IP flottantes (doit appartenir au même réseau que HOST_IP)
-FLOATING_RANGE=192.168.1.120/25
-Q_FLOATING_ALLOCATION_POOL=start=192.168.1.122,end=192.168.1.127
+FLOATING_RANGE=192.168.1.122/27
+Q_FLOATING_ALLOCATION_POOL=start=192.168.1.123,end=192.168.1.130
 
 # interface reliée au LAN externe (pas d’IP assignée directement)
 PUBLIC_INTERFACE=ens34
-FLAT_INTERFACE=ens34
+FLAT_INTERFACE=$PUBLIC_INTERFACE
 
 # Serveurs DNS pour les instances
+PUBLIC_NETWORK_GATEWAY=192.168.1.1
 DNS_SERVERS=8.8.8.8,8.8.4.4
 
 # ++++++++++++++++++++++++++++
@@ -198,6 +200,11 @@ SERVICE_TOKEN=password
 
 # Keystone (Identity)
 KEYSTONE_TONE_FORMAT=fernet
+
+# +++++++++++++++++++++++++
+# CONFIGURATION MULTI-NOEUD
+# +++++++++++++++++++++++++
+MULTI_HOST=1
 
 # +++++++++++++++++++++++++++
 # SERVICES CORE - CONTRÔLEUR
@@ -215,7 +222,6 @@ ENABLED_SERVICES+=,g-api,g-reg
 ENABLED_SERVICES+=,n-api,n-crt,n-cpu,n-cond,n-sch,n-api-meta,n-sproxy,n-novnc n-cauth,placement-api,placement-client
 
 # Neutron (Network Controller)
-enable_plugin neutron https://opendev.org/openstack/neutron
 ENABLED_SERVICES+=,q-svc,q-agt,q-dhcp,q-l3,q-meta,neutron
 
 # Cinder (Block Storage Controller)
@@ -280,16 +286,14 @@ storage_availability_zone = nova
 # ++++++++++++++++++++++++++++++++
 # CONFIGURATION NEUTRON (RÉSEAU)
 # ++++++++++++++++++++++++++++++++
-[[post-config|/$Q_PLUGIN_CONF_FILE]]
-[ml2]
-Q_TYPE_DRIVERS+=,flat,vlan,vxlan
-Q_ML2_TENANT_NETWORK_TYPE=vxlan
 Q_AGENT=openvswitch
+Q_ML2_TENANT_NETWORK_TYPE=vxlan
 Q_ML2_PLUGIN_MECHANISM_DRIVERS=openvswitch,l2population
+Q_TYPE_DRIVERS+=,flat,vlan,vxlan
 Q_ML2_PLUGIN_EXT_DRIVERS=port_security
-SCHEDULER=nova.scheduler.chance.ChanceScheduler
-ENABLE_TENANT_VLANS=True
-ENABLE_TENANT_TUNNELS=True
+
+# Plugins Neutron
+enable_plugin neutron https://opendev.org/openstack/neutron
 
 [ml2_type_vxlan]
 vni_ranges = 1:1000
@@ -345,11 +349,6 @@ ENABLE_DEBUG_LOG_LEVEL=True
 
 # Désactiver les services qui ne doivent pas tourner sur le contrôleur
 DISABLE_SERVICE+=,n-cpu q-agt tempest,etcd3,tempest
-
-# +++++++++++++++++++++++++
-# CONFIGURATION MULTI-NOEUD
-# +++++++++++++++++++++++++
-MULTI_HOST=1
 ```
 
 ### Lancer l’installation
