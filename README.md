@@ -282,10 +282,14 @@ storage_availability_zone = nova
 # ++++++++++++++++++++++++++++++++
 [[post-config|/$Q_PLUGIN_CONF_FILE]]
 [ml2]
-type_drivers = flat,vlan,vxlan
-tenant_network_types = vxlan
-mechanism_drivers = openvswitch,l2population
-extension_drivers = port_security
+Q_TYPE_DRIVERS+=,flat,vlan,vxlan
+Q_ML2_TENANT_NETWORK_TYPE=vxlan
+Q_AGENT=openvswitch
+Q_ML2_PLUGIN_MECHANISM_DRIVERS=openvswitch,l2population
+Q_ML2_PLUGIN_EXT_DRIVERS=port_security
+SCHEDULER=nova.scheduler.chance.ChanceScheduler
+ENABLE_TENANT_VLANS=True
+ENABLE_TENANT_TUNNELS=True
 
 [ml2_type_vxlan]
 vni_ranges = 1:1000
@@ -346,11 +350,6 @@ DISABLE_SERVICE+=,n-cpu q-agt tempest,etcd3,tempest
 # CONFIGURATION MULTI-NOEUD
 # +++++++++++++++++++++++++
 MULTI_HOST=1
-
-Q_AGENT=openvswitch
-Q_ML2_PLUGIN_MECHANISM_DRIVERS=openvswitch,l2population
-Q_ML2_PLUGIN_EXT_DRIVERS=port_security
-SCHEDULER=nova.scheduler.chance.ChanceScheduler
 ```
 
 ### Lancer l’installation
