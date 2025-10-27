@@ -354,9 +354,6 @@ MULTI_HOST=1
 sudo su - stack
 cd /opt/stack/devstack
 ./stack.sh
-. ./openrc
-
-openstack network list  # devrait afficher les réseaux publics et privés
 
 # Ce script télécharge, configure et déploie les services OpenStack sur le nœud contrôleur. Cela peut prendre du temps (10-30 minutes selon la machine).
 ```
@@ -388,13 +385,17 @@ nano local.conf
 # +++++++++++++++++++++
 # CONFIGURATION RESEAU
 # +++++++++++++++++++++
-# Adresse IP du nœud compute (celle de ta machine sur le LAN)
+# Adresse IP du nœud compute (sur ton LAN)
 HOST_IP=192.168.1.42
-SERVICE_HOST=192.168.1.121  # Adresse IP du nœud contrôleur
+
+# Adresse IP du nœud contrôleur
+SERVICE_HOST=192.168.1.121
 
 # réseau (identique au controleur)
 FIXED_RANGE=10.0.1.0/20
 FLOATING_RANGE=192.168.1.120/25
+
+# Interface réseau
 PUBLIC_INTERFACE=ens34
 FLAT_INTERFACE=ens34
 
@@ -424,10 +425,7 @@ KEYSTONE_SERVICE_HOST=$SERVICE_HOST
 # SERVICES ACTIVÉS SUR COMPUTE
 # +++++++++++++++++++++++++++++
 # Nova Compute (Hyperviseur)
-ENABLED_SERVICES+=,n-cpu
-
-# Placement Client
-ENABLED_SERVICES+=,placement-client
+ENABLED_SERVICES+=,n-cpu,placement-client
 
 # Neutron Agent (Réseau)
 ENABLED_SERVICES+=,q-agt
@@ -481,11 +479,11 @@ l2_population = True
 [securitygroup]
 firewall_driver = neutron.agent.linux.iptables_firewall.OVSHybridIptablesFirewallDriver
 
-# +++++
-# LOGS
-# +++++
+# ++++++++
+# LOGGING
+# ++++++++
 # Enable Logging
-LOGFILE=/opt/stack/logs/stack.sh.log
+LOGFILE=$DEST/logs/stack.sh.log
 LOGDAYS=7
 VERBOSE=True
 LOG_COLOR=True
@@ -493,7 +491,7 @@ LOG_COLOR=True
 # +++++++++++++++++++++++++++++++++++++++++++++++
 # SERVICES DÉSACTIVÉS (EXÉCUTENT SUR CONTRÔLEUR)
 # +++++++++++++++++++++++++++++++++++++++++++++++
-DISABLE_SERVICE+=,mysql rabbit key
+DISABLE_SERVICE=mysql rabbit key
 DISABLE_SERVICE+=,horizon
 DISABLE_SERVICE+=,g-api g-reg
 DISABLE_SERVICE+=,n-api n-cond n-sch n-novnc n-cauth
@@ -512,6 +510,8 @@ MULTI_HOST=1
 
 ```bash
 # Exécutez le script stack.sh
+sudo su - stack
+cd /opt/stack/devstack
 ./stack.sh
 
 # Ce script télécharge, configure et déploie les services OpenStack sur le nœud compute. Cela peut prendre du temps (10-30 minutes selon la machine).
