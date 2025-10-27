@@ -196,7 +196,7 @@ SERVICE_PASSWORD=password
 SERVICE_TOKEN=password
 
 # Keystone (Identity)
-KEYSTONE_TONE_FORMAT=fermet
+KEYSTONE_TONE_FORMAT=fernet
 
 # +++++++++++++++++++++++++++
 # SERVICES CORE - CONTRÔLEUR
