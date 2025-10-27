@@ -178,6 +178,7 @@ FIXED_RANGE=10.0.1.0/20
 
 # Plage d’adresses IP flottantes (doit appartenir au même réseau que HOST_IP)
 FLOATING_RANGE=192.168.1.120/25
+Q_FLOATING_ALLOCATION_POOL=start=192.168.1.122,end=192.168.1.127
 
 # interface reliée au LAN externe (pas d’IP assignée directement)
 PUBLIC_INTERFACE=ens34
@@ -345,6 +346,11 @@ DISABLE_SERVICE+=,n-cpu q-agt tempest,etcd3,tempest
 # CONFIGURATION MULTI-NOEUD
 # +++++++++++++++++++++++++
 MULTI_HOST=1
+
+Q_AGENT=openvswitch
+Q_ML2_PLUGIN_MECHANISM_DRIVERS=openvswitch,l2population
+Q_ML2_PLUGIN_EXT_DRIVERS=port_security
+SCHEDULER=nova.scheduler.chance.ChanceScheduler
 ```
 
 ### Lancer l’installation
