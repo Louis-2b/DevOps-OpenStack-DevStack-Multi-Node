@@ -169,11 +169,11 @@ nano local.conf
 # +++++++++++++++++++++
 # CONFIGURATION RESEAU
 # +++++++++++++++++++++
-# Adresse IP du nœud contrôleur (celle de ta machine sur le LAN)
+# Adresse IP du nœud contrôleur (ton IP LAN)
 HOST_IP=192.168.1.121
 SERVICE_HOST=192.168.1.121
 
-# Plage réseau interne pour les instances (ne doit pas entrer en conflit avec ton LAN)
+# Plage réseau interne (pour les instances)
 FIXED_RANGE=10.0.1.0/20
 
 # Plage d’adresses IP flottantes (doit appartenir au même réseau que HOST_IP)
@@ -181,11 +181,9 @@ FLOATING_RANGE=192.168.1.120/25
 
 # interface reliée au LAN externe (pas d’IP assignée directement)
 PUBLIC_INTERFACE=ens34
-
-# utilisée par Neutron pour le réseau provider
 FLAT_INTERFACE=ens34
 
-# DNS pour les instances
+# Serveurs DNS pour les instances
 DNS_SERVERS=8.8.8.8,8.8.4.4
 
 # ++++++++++++++++++++++++++++
@@ -203,18 +201,17 @@ KEYSTONE_TONE_FORMAT=fermet
 # +++++++++++++++++++++++++++
 # SERVICES CORE - CONTRÔLEUR
 # +++++++++++++++++++++++++++
-# Pre-requisite
+# Service de base requis
 ENABLED_SERVICES=rabbit,mysql,key
 
-# Horizon - activer pour l'interface graphique Web OpenStack
+# Horizon (interface Web)
 ENABLED_SERVICES+=,horizon
 
 # Glance (Image Service)
 ENABLED_SERVICES+=,g-api,g-reg
 
 # Nova (Compute Controller)
-ENABLED_SERVICES+=,n-api,n-crt,n-cpu,n-cond,n-sch,n-api-meta,n-sproxy,n-novnc n-cauth
-ENABLED_SERVICES+=,placement-api,placement-client
+ENABLED_SERVICES+=,n-api,n-crt,n-cpu,n-cond,n-sch,n-api-meta,n-sproxy,n-novnc n-cauth,placement-api,placement-client
 
 # Neutron (Network Controller)
 enable_plugin neutron https://opendev.org/openstack/neutron
@@ -335,16 +332,14 @@ debug = True
 # LOGS & MO?ITORING
 # +++++++++++++++++++++
 # Enable Logging
-LOGFILE=/opt/stack/logs/stack.sh.log
+LOGFILE=$DEST/logs/stack.sh.log
 VERBOSE=True
 LOG_COLOR=True
 LOGDAYS=7
 ENABLE_DEBUG_LOG_LEVEL=True
 
 # Désactiver les services qui ne doivent pas tourner sur le contrôleur
-DISABLE_SERVICE+=,n-cpu q-agt tempest
-DISABLE_SERVICE+=,etcd3
-DISABLE_SERVICE+=,tempest
+DISABLE_SERVICE+=,n-cpu q-agt tempest,etcd3,tempest
 
 # +++++++++++++++++++++++++
 # CONFIGURATION MULTI-NOEUD
@@ -355,8 +350,13 @@ MULTI_HOST=1
 ### Lancer l’installation
 
 ```bash
-# Exécutez le script stack.sh
+# Exécutez stack.sh et effectuez quelques vérifications de cohérence
+sudo su - stack
+cd /opt/stack/devstack
 ./stack.sh
+. ./openrc
+
+openstack network list  # devrait afficher les réseaux publics et privés
 
 # Ce script télécharge, configure et déploie les services OpenStack sur le nœud contrôleur. Cela peut prendre du temps (10-30 minutes selon la machine).
 ```
