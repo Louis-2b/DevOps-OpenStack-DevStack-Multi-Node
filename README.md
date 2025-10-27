@@ -141,7 +141,11 @@ sudo su - stack
 
 # Cloner DevStack
 git clone https://opendev.org/openstack/devstack
-cd devstack
+cd devstack/tools
+sudo ./create-stack-user.sh
+cd ../..
+sudo mv devstack /opt/stack
+sudo chown -R stack.stack /opt/stack/devstack
 
 # Vérifier la connectivité réseau
 ping -c 3 192.168.1.121  # Depuis compute vers contrôleur
@@ -154,6 +158,7 @@ ping -c 3 192.168.1.121  # Depuis compute vers contrôleur
 Le nœud contrôleur exécute tous les services OpenStack.
 
 ### Créer le fichier de configuration local.conf
+Modifiez votre /opt/stack/devstack/local.conf pour qu'il ressemble à :
 
 ```bash
 nano local.conf
@@ -373,6 +378,7 @@ openstack endpoint list
 Les nœuds de calcul exécutent uniquement les services de travail OpenStack.
 
 ### Créer le fichier de configuration local.conf
+Modifiez votre /opt/stack/devstack/local.conf pour qu'il ressemble à :
 
 ```bash
 nano local.conf
