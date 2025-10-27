@@ -450,7 +450,7 @@ vncserver_listen = 0.0.0.0
 vncserver_proxyclient_address = $HOST_IP
 
 [libvirt]
-virt_type = qemu  # ou 'kvm' si pas de support QEMU
+virt_type = kvm  # ou 'kvm' si pas de support QEMU
 cpu_mode = host-passthrough
 disk_cachemodes = network=writeback
 
