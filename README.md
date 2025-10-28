@@ -179,6 +179,7 @@ Q_FLOATING_ALLOCATION_POOL=start=192.168.1.123,end=192.168.1.130
 
 # interface reliée au LAN externe
 PUBLIC_INTERFACE=ens34
+FLAT_INTERFACE=$PUBLIC_INTERFACE
 
 # Serveurs DNS pour les instances
 PUBLIC_NETWORK_GATEWAY=192.168.1.1
@@ -479,12 +480,14 @@ HOST_IP=192.168.1.42
 SERVICE_HOST=192.168.1.121
 
 # réseau (identique au controleur)
-FIXED_RANGE=10.0.1.0/20
-FLOATING_RANGE=192.168.1.120/25
+FIXED_RANGE=10.0.1.0/24
+FIXED_NETWORK_SIZE=256
+FLOATING_RANGE=192.168.1.122/27
+Q_FLOATING_ALLOCATION_POOL=start=192.168.1.123,end=192.168.1.130
 
 # Interface réseau
 PUBLIC_INTERFACE=ens34
-FLAT_INTERFACE=ens34
+FLAT_INTERFACE=$PUBLIC_INTERFACE
 
 # +++++++++++++++++++++++++
 # CONFIGURATION MULTI-NŒUD
@@ -512,12 +515,26 @@ Q_HOST=$SERVICE_HOST
 # Keystone
 KEYSTONE_AUTH_HOST=$SERVICE_HOST
 KEYSTONE_SERVICE_HOST=$SERVICE_HOST
+KEYSTONE_TOKEN_FORMAT=fernet
 
 # +++++++++++++++++++++++++++++
 # SERVICES ACTIVÉS SUR COMPUTE
 # +++++++++++++++++++++++++++++
-# Nova Compute (Hyperviseur)
-ENABLED_SERVICES+=,n-cpu,c-vol,placement-client,ovn-controller,ovs-vswitchd,ovsdb-server,q-ovn-metadata-agent
+# IMPORTANT: Sur Compute on active uniquement n-cpu et q-agt
+ENABLED_SERVICES=n-cpu,q-agt,placement-client
+
+# +++++++++++++++++++++++++++
+# CONFIGURATIONNOVA COMPUTE
+# +++++++++++++++++++++++++++
+# Type d'hyperviseur
+# ou 'kvm' si pas de support QEMU
+LIBVIRT_TYPE=qemu
+
+# VNC Configuration
+NOVA_VNC_ENABLED=True
+NOVNCPROXY_URL="http://$SERVICE_HOST:6080/vnc_lite.html"
+VNCSERVER_LISTEN=$HOST_IP
+VNCSERVER_PROXYCLIENT_ADDRESS=$VNCSERVER_LISTEN
 
 # Neutron Agent (Réseau)
 ENABLED_SERVICES+=,q-agt
@@ -535,16 +552,8 @@ compute_driver = libvirt.LibvirtDriver
 vif_plugging_is_fatal = False
 vif_plugging_timeout = 300
 
-# VNC Configuration
-NOVA_VNC_ENABLED=True
-NOVNCPROXY_URL="http://$SERVICE_HOST:6080/vnc_lite.html"
-VNCSERVER_LISTEN=$HOST_IP
-VNCSERVER_PROXYCLIENT_ADDRESS=$VNCSERVER_LISTEN
 
-[libvirt]
-virt_type = qemu  # ou 'kvm' si pas de support QEMU
-cpu_mode = host-passthrough
-disk_cachemodes = network=writeback
+
 
 [neutron]
 auth_url = http://$SERVICE_HOST:5000
