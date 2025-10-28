@@ -169,7 +169,6 @@ nano local.conf
 # +++++++++++++++++++++
 # CONFIGURATION RESEAU
 # +++++++++++++++++++++
-# Adresse IP du nœud contrôleur (ton IP LAN)
 HOST_IP=192.168.1.121
 SERVICE_HOST=192.168.1.121
 
@@ -177,13 +176,12 @@ SERVICE_HOST=192.168.1.121
 FIXED_RANGE=10.0.1.0/24
 FIXED_NETWORK_SIZE=256
 
-# Plage d’adresses IP flottantes (doit appartenir au même réseau que HOST_IP)
+# Plage d’adresses IP flottantes
 FLOATING_RANGE=192.168.1.122/27
 Q_FLOATING_ALLOCATION_POOL=start=192.168.1.123,end=192.168.1.130
 
-# interface reliée au LAN externe (pas d’IP assignée directement)
+# interface reliée au LAN externe
 PUBLIC_INTERFACE=ens34
-FLAT_INTERFACE=$PUBLIC_INTERFACE
 
 # Serveurs DNS pour les instances
 PUBLIC_NETWORK_GATEWAY=192.168.1.1
@@ -201,7 +199,7 @@ SERVICE_TOKEN=password
 # ++++++++++++++++++++
 # Keystone (Identity)
 # ++++++++++++++++++++
-KEYSTONE_TONE_FORMAT=fernet
+KEYSTONE_TOKEN_FORMAT=fernet
 KEYSTONE_CATALOG_BACKEND=sql
 
 # +++++++++++++++++++++++++
@@ -221,7 +219,6 @@ SYSLOG=True
 LOG_COLOR=True
 LOGDAYS=7
 ENABLE_DEBUG_LOG_LEVEL=True
-
 
 # +++++++++++++++++++++++++++
 # SERVICES CORE - CONTRÔLEUR
@@ -250,17 +247,24 @@ LIBVIRT_TYPE=qemu
 enable_plugin neutron https://opendev.org/openstack/neutron
 ENABLED_SERVICES+=,neutron,q-svc,q-agt,q-dhcp,q-l3,q-meta,q-lbaas
 
+# CONFIGURATION NEUTRON (RÉSEAU)
+Q_AGENT=openvswitch
+Q_ML2_TENANT_NETWORK_TYPE=vxlan
+Q_ML2_PLUGIN_MECHANISM_DRIVERS=openvswitch,l2population
+Q_ML2_PLUGIN_TYPE_DRIVERS=flat,vlan,vxlan
+Q_ML2_PLUGIN_EXT_DRIVERS=port_security
+
 # +++++++++++++++++++++++++++++++
 # CINDER – BLOCK DEVICE SERVICE
 # +++++++++++++++++++++++++++++++
 ENABLED_SERVICES+=,cinder,c-api,c-vol,c-sch,c-bak
-CINDER_DRIVER=ceph
-CINDER_ENABLED_BACKENDS=ceph
+#CINDER_DRIVER=ceph
+#CINDER_ENABLED_BACKENDS=ceph
 
 # +++++++++++++++++++++++
 # SWIFT (Object Storage)
 # +++++++++++++++++++++++
-ENABLED_SERVICES=swift3
+ENABLED_SERVICES+=,swift
 ENABLED_SERVICES+=,s-proxy s-object s-container s-account
 SWIFT_HASH=$(openssl rand -hex 16)
 SWIFT_REPLICAS=1
@@ -270,8 +274,8 @@ SWIFT_DATA_DIR=$DEST/data/swift
 # Designate (DNS as a Service)
 # +++++++++++++++++++++++++++++
 enable_plugin designate https://opendev.org/openstack/designate
-ENABLED_SERVICES+=,designate,designate-central,designate-api,designate-worker,designate-producer,designate-mdns
 enable_plugin designate-dashboard https://opendev.org/openstack/designate-dashboard
+ENABLED_SERVICES+=,designate,designate-central,designate-api,designate-worker,designate-producer,designate-mdns
 
 # +++++++++++++++++++++
 # HEAT (Orchestration)
@@ -295,57 +299,57 @@ enable_plugin barbican https://opendev.org/openstack/barbican
 # Barbican - Utilisé en option pour le déchargement TLS dans Octavia
 ENABLED_SERVICES+=,barbican
 
-# +++++++
-# Manila 
-# +++++++
+# ++++++++++++++++++++++++++++
+# Manila (Shared Filesystems)
+# ++++++++++++++++++++++++++++
 enable_plugin manila https://github.com/openstack/manila
-enable_plugin manila-ui https://github.com/openstack/manila-u
+enable_plugin manila-ui https://github.com/openstack/manila-ui
 
 # +++++
 # CEPH 
 # +++++
-enable_plugin devstack-plugin-ceph https://github.com/openstack/devstack-plugin-ceph
-ENABLED_SERVICES=ceph
+#enable_plugin devstack-plugin-ceph https://github.com/openstack/devstack-plugin-ceph
+#ENABLED_SERVICES=ceph
 
 # DevStack créera un disque en boucle formaté en XFS pour stocker les
 # Ceph data.
-CEPH_LOOPBACK_DISK_SIZE=30G
-CEPH_CONF=/etc/ceph/ceph.conf
+#CEPH_LOOPBACK_DISK_SIZE=30G
+#CEPH_CONF=/etc/ceph/ceph.conf
 
 # Ceph cluster fsid
-CEPH_FSID=$(uuidgen)
+#CEPH_FSID=$(uuidgen)
 
 # Glance pool, pgs and user
-GLANCE_CEPH_USER=glance
-GLANCE_CEPH_POOL=glance
-GLANCE_CEPH_POOL_PG=8
-GLANCE_CEPH_POOL_PGP=8
+#GLANCE_CEPH_USER=glance
+#GLANCE_CEPH_POOL=glance
+#GLANCE_CEPH_POOL_PG=8
+#GLANCE_CEPH_POOL_PGP=8
 
 # Nova pool and pgs
-NOVA_CEPH_POOL=nova
-NOVA_CEPH_POOL_PG=8
-NOVA_CEPH_POOL_PGP=8
+#NOVA_CEPH_POOL=nova
+#NOVA_CEPH_POOL_PG=8
+"NOVA_CEPH_POOL_PGP=8
 
 # Cinder pool, pgs and user
-CINDER_DRIVER=ceph
-CINDER_CEPH_POOL=cinder
-CINDER_CEPH_USER=cinder
-CINDER_CEPH_UUID=$(uuidgen)
-CINDER_CEPH_POOL_PG=8
-CINDER_CEPH_POOL_PGP=8
+#CINDER_DRIVER=ceph
+#CINDER_CEPH_POOL=cinder
+#CINDER_CEPH_USER=cinder
+#CINDER_CEPH_UUID=$(uuidgen)
+#CINDER_CEPH_POOL_PG=8
+#CINDER_CEPH_POOL_PGP=8
 
 # Cinder backup pool, pgs and user
-CINDER_BAK_CEPH_POOL=backup
-CINDER_BAK_CEPH_POOL_PG=8
-CINDER_BAKCEPH_POOL_PGP=8
-CINDER_BAK_CEPH_USER=cinder-bak
+#CINDER_BAK_CEPH_POOL=backup
+#CINDER_BAK_CEPH_POOL_PG=8
+#CINDER_BAKCEPH_POOL_PGP=8
+#CINDER_BAK_CEPH_USER=cinder-bak
 
 # Combien de répliques doivent être configurées pour votre cluster Ceph
-CEPH_REPLICAS=${CEPH_REPLICAS:-1}
+#CEPH_REPLICAS=${CEPH_REPLICAS:-1}
 
 # Connectez DevStack à un cluster Ceph existant
-REMOTE_CEPH=False
-REMOTE_CEPH_ADMIN_KEY_PATH=/etc/ceph/ceph.client.admin.keyring
+#REMOTE_CEPH=False
+#REMOTE_CEPH_ADMIN_KEY_PATH=/etc/ceph/ceph.client.admin.keyring
 
 # +++++++++++++++++++++++++++++++++++++
 # CONFIGURATION CINDER (BLOCK STORAGE)
@@ -374,14 +378,15 @@ enabled_backends = cinder-volumes
 default_volume_type = cinder-volumes
 storage_availability_zone = nova
 
-# ++++++++++++++++++++++++++++++++
-# CONFIGURATION NEUTRON (RÉSEAU)
-# ++++++++++++++++++++++++++++++++
-Q_AGENT=openvswitch
-Q_ML2_TENANT_NETWORK_TYPE=vxlan
-Q_ML2_PLUGIN_MECHANISM_DRIVERS=openvswitch,l2population
-Q_TYPE_DRIVERS+=,flat,vlan,vxlan
-Q_ML2_PLUGIN_EXT_DRIVERS=port_security
+# +++++++++++++++++++++
+# POST-CONFIG: NEUTRON
+# +++++++++++++++++++++
+[[POST6CONFIG|/$Q_PLUGIN_CONF_FILE]]
+[ml2]
+type_drivers=flat,vlan,vxlan
+tenant_network_type=vxlan
+mechanism_drivers=openvswitch,l2population
+extension_drivers=port_security
 
 [ml2_type_vxlan]
 vni_ranges = 1:1000
@@ -391,39 +396,44 @@ flat_networks = public
 
 [ovs]
 bridge_mappings = public:br-ex
+local_ip=£HOST_IP
+
+[agent]
+tunnel_types=vxlan
+l2_population=True
 
 # +++++++++++++++++++++++++++++++
-# CONFIGURATION DESIGNATE (DNS)
+# POST-CONFIG DESIGNATE (DNS)
 # +++++++++++++++++++++++++++++++
 [[post-config|$DESIGNATE_CONF]]
 [service:api]
 listen = 0.0.0.0:9001
-api_base_uri = http://192.168.1.121:9001/
-auth_strategy = keystone
-enable_api_v2 = True
-enable_api_admin = True
+api_base_uri=http://$SERVICE_HOST:9001/
+auth_strategy=keystone
+enable_api_v2=True
+enable_api_admin=True
 
 [DEFAULT]
-debug = True
-default_pool_id = 794ccc2c-d751-44fe-b57f-8894c9f5c842
+debug=True
+default_pool_id=794ccc2c-d751-44fe-b57f-8894c9f5c842
 
 [service:worker]
-enabled = True
-notify = True
+enabled=True
+notify=True
 
 [service:mdns]
-enabled = True
+enabled=True
 
 # +++++++++++++++++++++++++++++++++++++++
 # CONFIGURATION OCTAVIA (LOAD BALANCER)
 # +++++++++++++++++++++++++++++++++++++++
 [[post-config|$OCTAVIA_CONF]]
 [controller_worker]
-amp_boot_network_list = $(neutron net-list | awk '/lb-mgmt-net/ {print $2}')
-amp_flavor_id = 65
+amp_boot_network_list=$(neutron net-list | awk '/lb-mgmt-net/ {print $2}')
+amp_flavor_id=65
 
 [DEFAULT]
-debug = True
+debug=True
 
 # Désactiver les services qui ne doivent pas tourner sur le contrôleur
 DISABLE_SERVICE+=,n-cpu q-agt tempest,etcd3,tempest
