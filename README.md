@@ -161,9 +161,6 @@ Le nœud contrôleur exécute tous les services OpenStack.
 Modifiez votre /opt/stack/devstack/local.conf pour qu'il ressemble à :
 
 ```bash
-nano local.conf
-
-
 [[local|localrc]]
 
 # +++++++++++++++++++++
@@ -470,8 +467,6 @@ Les nœuds de calcul exécutent uniquement les services de travail OpenStack.
 Modifiez votre /opt/stack/devstack/local.conf pour qu'il ressemble à :
 
 ```bash
-nano local.conf
-
 [[local|localrc]]
 
 # +++++++++++++++++++++
