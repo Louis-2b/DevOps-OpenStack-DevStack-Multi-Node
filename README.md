@@ -198,70 +198,161 @@ RABBIT_PASSWORD=password
 SERVICE_PASSWORD=password
 SERVICE_TOKEN=password
 
+# ++++++++++++++++++++
 # Keystone (Identity)
+# ++++++++++++++++++++
 KEYSTONE_TONE_FORMAT=fernet
+KEYSTONE_CATALOG_BACKEND=sql
 
 # +++++++++++++++++++++++++
 # CONFIGURATION MULTI-NOEUD
 # +++++++++++++++++++++++++
 MULTI_HOST=1
 
+# +++++++++++++++++++++
+# LOGS & MO?ITORING
+# +++++++++++++++++++++
+DEBUG=True
+VERBOSE=True
+DEST=/opt/stack
+LOGFILE=$DEST/logs/stack.sh.log
+SCREEN_LOGDIR=/opt/stack/logs
+SYSLOG=True
+LOG_COLOR=True
+LOGDAYS=7
+ENABLE_DEBUG_LOG_LEVEL=True
+
+
 # +++++++++++++++++++++++++++
 # SERVICES CORE - CONTRÔLEUR
 # +++++++++++++++++++++++++++
-# Service de base requis
 ENABLED_SERVICES=rabbit,mysql,key
 
-# Horizon (interface Web)
+# ++++++++++++++++++++++++
+# HORIZON – INTERFACE WEB
+# ++++++++++++++++++++++++
 ENABLED_SERVICES+=,horizon
 
-# Glance (Image Service)
+# ++++++++++++++++++++++++
+# GLANCE – IMAGE SERVICE
+# ++++++++++++++++++++++++
 ENABLED_SERVICES+=,g-api,g-reg
 
-# Nova (Compute Controller)
-ENABLED_SERVICES+=,n-api,n-crt,n-cpu,n-cond,n-sch,n-api-meta,n-sproxy,n-novnc n-cauth,placement-api,placement-client
+# ++++++++++++++++++++++++
+# NOVA – COMPUTE SERVICE
+# ++++++++++++++++++++++++
+ENABLED_SERVICES+=,n-api,n-crt,n-cpu,n-cond,n-sch,n-api-meta,n-sproxy,n-novnc n-cauth,placement-api,placement-client,n-net
+LIBVIRT_TYPE=qemu
 
-# Neutron (Network Controller)
-ENABLED_SERVICES+=,q-svc,q-agt,q-dhcp,q-l3,q-meta,neutron
+# +++++++++
+# NEUTRON
+# +++++++++
+enable_plugin neutron https://opendev.org/openstack/neutron
+ENABLED_SERVICES+=,neutron,q-svc,q-agt,q-dhcp,q-l3,q-meta,q-lbaas
 
-# Cinder (Block Storage Controller)
-ENABLED_SERVICES+=,c-api,c-vol,c-sch
+# +++++++++++++++++++++++++++++++
+# CINDER – BLOCK DEVICE SERVICE
+# +++++++++++++++++++++++++++++++
+ENABLED_SERVICES+=,cinder,c-api,c-vol,c-sch,c-bak
+CINDER_DRIVER=ceph
+CINDER_ENABLED_BACKENDS=ceph
 
-# ++++++++++++++++++++++
-# SERVICES ADDITIONNELS
-# ++++++++++++++++++++++
-# Swift (Object Storage)
+# +++++++++++++++++++++++
+# SWIFT (Object Storage)
+# +++++++++++++++++++++++
+ENABLED_SERVICES=swift3
 ENABLED_SERVICES+=,s-proxy s-object s-container s-account
 SWIFT_HASH=$(openssl rand -hex 16)
 SWIFT_REPLICAS=1
 SWIFT_DATA_DIR=$DEST/data/swift
 
+# +++++++++++++++++++++++++++++
 # Designate (DNS as a Service)
+# +++++++++++++++++++++++++++++
 enable_plugin designate https://opendev.org/openstack/designate
 ENABLED_SERVICES+=,designate,designate-central,designate-api,designate-worker,designate-producer,designate-mdns
 enable_plugin designate-dashboard https://opendev.org/openstack/designate-dashboard
 
-# Heat (Orchestration)
+# +++++++++++++++++++++
+# HEAT (Orchestration)
+# +++++++++++++++++++++
 enable_plugin heat https://opendev.org/openstack/heat
 ENABLED_SERVICES+=,h-eng h-api h-api-cfn h-api-cw
 
-# Octavia (Load Balancing)
+# +++++++++++++++++++++++++
+# OCTAVIA (Load Balancing)
+# +++++++++++++++++++++++++
 enable_plugin octavia https://opendev.org/openstack/octavia
 # Si vous activez Horizon, incluez le tableau de bord Octavia
 enable_plugin octavia-dashboard https://opendev.org/openstack/octavia-dashboard.git
 ENABLED_SERVICES+=,octavia,o-cw,o-hk,o-hm,o-api
 
+# ++++++++++++++++++++++++++
 # Barbican (Key Management)
+# ++++++++++++++++++++++++++
 # Si vous activez Barbican pour le déchargement TLS dans Octavia, incluez-le ici
 enable_plugin barbican https://opendev.org/openstack/barbican
 # Barbican - Utilisé en option pour le déchargement TLS dans Octavia
 ENABLED_SERVICES+=,barbican
+
+# +++++++
+# Manila 
+# +++++++
+enable_plugin manila https://github.com/openstack/manila
+enable_plugin manila-ui https://github.com/openstack/manila-u
+
+# +++++
+# CEPH 
+# +++++
+enable_plugin devstack-plugin-ceph https://github.com/openstack/devstack-plugin-ceph
+ENABLED_SERVICES=ceph
+
+# DevStack créera un disque en boucle formaté en XFS pour stocker les
+# Ceph data.
+CEPH_LOOPBACK_DISK_SIZE=30G
+CEPH_CONF=/etc/ceph/ceph.conf
+
+# Ceph cluster fsid
+CEPH_FSID=$(uuidgen)
+
+# Glance pool, pgs and user
+GLANCE_CEPH_USER=glance
+GLANCE_CEPH_POOL=glance
+GLANCE_CEPH_POOL_PG=8
+GLANCE_CEPH_POOL_PGP=8
+
+# Nova pool and pgs
+NOVA_CEPH_POOL=nova
+NOVA_CEPH_POOL_PG=8
+NOVA_CEPH_POOL_PGP=8
+
+# Cinder pool, pgs and user
+CINDER_DRIVER=ceph
+CINDER_CEPH_POOL=cinder
+CINDER_CEPH_USER=cinder
+CINDER_CEPH_UUID=$(uuidgen)
+CINDER_CEPH_POOL_PG=8
+CINDER_CEPH_POOL_PGP=8
+
+# Cinder backup pool, pgs and user
+CINDER_BAK_CEPH_POOL=backup
+CINDER_BAK_CEPH_POOL_PG=8
+CINDER_BAKCEPH_POOL_PGP=8
+CINDER_BAK_CEPH_USER=cinder-bak
+
+# Combien de répliques doivent être configurées pour votre cluster Ceph
+CEPH_REPLICAS=${CEPH_REPLICAS:-1}
+
+# Connectez DevStack à un cluster Ceph existant
+REMOTE_CEPH=False
+REMOTE_CEPH_ADMIN_KEY_PATH=/etc/ceph/ceph.client.admin.keyring
 
 # +++++++++++++++++++++++++++++++++++++
 # CONFIGURATION CINDER (BLOCK STORAGE)
 # +++++++++++++++++++++++++++++++++++++
 CINDER_ENABLED_BACKENDS=lvm:cinder-volumes
 VOLUME_GROUP=cinder-volumes
+VOLUME_NAME_PREFIX="volume-"
 VOLUME_BACKING_FILE_SIZE=0
 
 # configuration du volume group pour cinder
@@ -291,9 +382,6 @@ Q_ML2_TENANT_NETWORK_TYPE=vxlan
 Q_ML2_PLUGIN_MECHANISM_DRIVERS=openvswitch,l2population
 Q_TYPE_DRIVERS+=,flat,vlan,vxlan
 Q_ML2_PLUGIN_EXT_DRIVERS=port_security
-
-# Plugins Neutron
-enable_plugin neutron https://opendev.org/openstack/neutron
 
 [ml2_type_vxlan]
 vni_ranges = 1:1000
@@ -336,16 +424,6 @@ amp_flavor_id = 65
 
 [DEFAULT]
 debug = True
-
-# +++++++++++++++++++++
-# LOGS & MO?ITORING
-# +++++++++++++++++++++
-# Enable Logging
-LOGFILE=$DEST/logs/stack.sh.log
-VERBOSE=True
-LOG_COLOR=True
-LOGDAYS=7
-ENABLE_DEBUG_LOG_LEVEL=True
 
 # Désactiver les services qui ne doivent pas tourner sur le contrôleur
 DISABLE_SERVICE+=,n-cpu q-agt tempest,etcd3,tempest
@@ -403,6 +481,11 @@ FLOATING_RANGE=192.168.1.120/25
 PUBLIC_INTERFACE=ens34
 FLAT_INTERFACE=ens34
 
+# +++++++++++++++++++++++++
+# CONFIGURATION MULTI-NŒUD
+# +++++++++++++++++++++++++
+MULTI_HOST=1
+
 # ++++++++++++++++++++++++++++++++++++++++++++
 # AUTHENTIFICATION (IDENTIQUES AU CONTRÔLEUR)
 # ++++++++++++++++++++++++++++++++++++++++++++
@@ -429,7 +512,7 @@ KEYSTONE_SERVICE_HOST=$SERVICE_HOST
 # SERVICES ACTIVÉS SUR COMPUTE
 # +++++++++++++++++++++++++++++
 # Nova Compute (Hyperviseur)
-ENABLED_SERVICES+=,n-cpu,placement-client
+ENABLED_SERVICES+=,n-cpu,c-vol,placement-client,ovn-controller,ovs-vswitchd,ovsdb-server,q-ovn-metadata-agent
 
 # Neutron Agent (Réseau)
 ENABLED_SERVICES+=,q-agt
@@ -448,13 +531,13 @@ vif_plugging_is_fatal = False
 vif_plugging_timeout = 300
 
 # VNC Configuration
-vnc_enabled = True
-novncproxy_base_url = http://$SERVICE_HOST:6080/vnc_lite.html
-vncserver_listen = 0.0.0.0
-vncserver_proxyclient_address = $HOST_IP
+NOVA_VNC_ENABLED=True
+NOVNCPROXY_URL="http://$SERVICE_HOST:6080/vnc_lite.html"
+VNCSERVER_LISTEN=$HOST_IP
+VNCSERVER_PROXYCLIENT_ADDRESS=$VNCSERVER_LISTEN
 
 [libvirt]
-virt_type = kvm  # ou 'kvm' si pas de support QEMU
+virt_type = qemu  # ou 'kvm' si pas de support QEMU
 cpu_mode = host-passthrough
 disk_cachemodes = network=writeback
 
@@ -499,15 +582,10 @@ DISABLE_SERVICE=mysql rabbit key
 DISABLE_SERVICE+=,horizon
 DISABLE_SERVICE+=,g-api g-reg
 DISABLE_SERVICE+=,n-api n-cond n-sch n-novnc n-cauth
-DISABLE_SERVICE+=,c-api c-sch c-vol c-bak
+DISABLE_SERVICE+=,c-api c-sch c-bak
 DISABLE_SERVICE+=,q-svc q-dhcp q-l3 q-meta
 DISABLE_SERVICE+=,s-proxy s-object s-container s-account
 DISABLE_SERVICE+=,tempest
-
-# +++++++++++++++++++++++++
-# CONFIGURATION MULTI-NŒUD
-# +++++++++++++++++++++++++
-MULTI_HOST=1
 ```
 
 ### Lancer l’installation
