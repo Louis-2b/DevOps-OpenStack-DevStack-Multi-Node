@@ -524,7 +524,7 @@ KEYSTONE_TOKEN_FORMAT=fernet
 ENABLED_SERVICES=n-cpu,q-agt,placement-client
 
 # +++++++++++++++++++++++++++
-# CONFIGURATIONNOVA COMPUTE
+# CONFIGURATION NOVA COMPUTE
 # +++++++++++++++++++++++++++
 # Type d'hyperviseur
 # ou 'kvm' si pas de support QEMU
@@ -541,16 +541,6 @@ ENABLED_SERVICES+=,q-agt
 
 # Monitoring Agent (optionnel)
 # ENABLED_SERVICES+=,ceilometer-acompute
-
-# +++++++++++++++++++++++++++
-# CONFIGURATION NOVA COMPUTE
-# +++++++++++++++++++++++++++
-[[post-config|$NOVA_CONF]]
-[DEFAULT]
-# Type d'hyperviseur
-compute_driver = libvirt.LibvirtDriver
-vif_plugging_is_fatal = False
-vif_plugging_timeout = 300
 
 
 
