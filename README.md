@@ -534,62 +534,124 @@ LIBVIRT_TYPE=qemu
 NOVA_VNC_ENABLED=True
 NOVNCPROXY_URL="http://$SERVICE_HOST:6080/vnc_lite.html"
 VNCSERVER_LISTEN=$HOST_IP
-VNCSERVER_PROXYCLIENT_ADDRESS=$VNCSERVER_LISTEN
-
-# Neutron Agent (Réseau)
-ENABLED_SERVICES+=,q-agt
-
-# Monitoring Agent (optionnel)
-# ENABLED_SERVICES+=,ceilometer-acompute
+VNCSERVER_PROXYCLIENT_ADDRESS=$HOST_IP
 
 
+# ++++++++++++++++++++++
+# CONFIGURATION NEUTRON
+# ++++++++++++++++++++++
+enable_plugin neutron https://opendev.org/openstack/neutron
 
-
-[neutron]
-auth_url = http://$SERVICE_HOST:5000
-auth_type = password
-project_domain_name = Default
-user_domain_name = Default
-region_name = RegionOne
-project_name = service
-username = neutron
-password = $SERVICE_PASSWORD
-
-# ++++++++++++++++++++++++++++
-# CONFIGURATION NEUTRON AGENT
-# ++++++++++++++++++++++++++++
-[[post-config|/$Q_PLUGIN_CONF_FILE]]
-[ovs]
-bridge_mappings = public:br-ex
-local_ip = $HOST_IP
-
-[agent]
-tunnel_types = vxlan
-l2_population = True
-
-[securitygroup]
-firewall_driver = neutron.agent.linux.iptables_firewall.OVSHybridIptablesFirewallDriver
+# Configuration OVS
+Q_AGENT=openvswitch
+Q_ML2_TENANT_NETWORK_TYPE=vxlan
+Q_ML2_PLUGIN_MECHANISM_DRIVERS=openvswitch,l2population
 
 # ++++++++
 # LOGGING
 # ++++++++
-# Enable Logging
+DEST=/opt/stack
 LOGFILE=$DEST/logs/stack.sh.log
+SCREEN_LOGDIR=$DEST/logs
 LOGDAYS=7
 VERBOSE=True
+DEBUG=True
 LOG_COLOR=True
+ENABLE_DEBUG_LOG_LEVEL=True
+
+# ++++++++++++++++++++++++++
+# POST-CONFIG: NOVA COMPUTE
+# ++++++++++++++++++++++++++
+[[post-config|$NOVA_CONF]]
+[DEFAULT]
+compute_driver=libvirt.LibvirtDriver
+vif_plugging_is_fatal=False
+vif_plugging_timeout=300
+
+[vnc]
+enabled=True
+server_listen=0.0.0.0
+server_proxyclient_address=$HOST_IP
+novncproxy_base_url=http://192.168.1.121:6080/vnc_lite.html
+
+[libvirt]
+virt_type=qemu
+cpu_mode=host-passthrough
+disk_cachemodes=network=writeback
+
+[neutron]
+auth_url=http://192.168.1.121:5000
+auth_type=password
+project_domain_name=Default
+user_domain_name=Default
+region_name=RegionOne
+project_name=service
+username=neutron
+password=password
+
+[placement]
+region_name=RegionOne
+project_domain_name=Default
+project_name=service
+auth_type=password
+user_domain_name=Default
+auth_url=http://192.168.1.121:5000
+username=placement
+password=password
+
+# +++++++++++++++++++++++++++
+# POST-CONFIG: NEUTRON AGENT
+# +++++++++++++++++++++++++++
+[[post-config|/$Q_PLUGIN_CONF_FILE]]
+[ovs]
+bridge_mappings=public:br-ex
+local_ip=192.168.1.42
+
+[agent]
+tunnel_types=vxlan
+l2_population=True
+
+[securitygroup]
+firewall_driver=neutron.agent.linux.iptables_firewall.OVSHybridIptablesFirewallDriver
 
 # +++++++++++++++++++++++++++++++++++++++++++++++
 # SERVICES DÉSACTIVÉS (EXÉCUTENT SUR CONTRÔLEUR)
 # +++++++++++++++++++++++++++++++++++++++++++++++
-DISABLE_SERVICE=mysql rabbit key
-DISABLE_SERVICE+=,horizon
-DISABLE_SERVICE+=,g-api g-reg
-DISABLE_SERVICE+=,n-api n-cond n-sch n-novnc n-cauth
-DISABLE_SERVICE+=,c-api c-sch c-bak
-DISABLE_SERVICE+=,q-svc q-dhcp q-l3 q-meta
-DISABLE_SERVICE+=,s-proxy s-object s-container s-account
-DISABLE_SERVICE+=,tempest
+# Services de base
+disable_service mysql rabbit key
+
+# Horizon
+disable_service horizon
+
+# Glance
+disable_service g-api g-reg
+
+# Nova API services
+disable_service n-api n-cond n-sch n-novnc n-cauth n-api-meta n-sproxy
+
+# Cinder API services (volume reste sur contrôleur)
+disable_service cinder c-api c-sch c-vol c-bak
+
+# Neutron services centraux
+disable_service q-svc q-dhcp q-l3 q-meta
+
+# Swift
+disable_service s-proxy s-object s-container s-account
+
+# Services additionnels
+disable_service tempest etcd3
+
+# Heat
+disable_service h-eng h-api h-api-cfn h-api-cw
+
+# Designate
+disable_service designate designate-central designate-api designate-worker designate-producer designate-mdns
+
+# Octavia
+disable_service octavia o-cw o-hk o-hm o-api
+
+# Barbican
+disable_service barbican
 ```
 
 ### Lancer l’installation
