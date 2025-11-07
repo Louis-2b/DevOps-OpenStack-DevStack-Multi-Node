@@ -326,7 +326,7 @@ enable_plugin manila-ui https://github.com/openstack/manila-ui
 # Nova pool and pgs
 #NOVA_CEPH_POOL=nova
 #NOVA_CEPH_POOL_PG=8
-"NOVA_CEPH_POOL_PGP=8
+#NOVA_CEPH_POOL_PGP=8
 
 # Cinder pool, pgs and user
 #CINDER_DRIVER=ceph
