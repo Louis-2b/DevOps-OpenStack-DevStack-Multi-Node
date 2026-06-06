@@ -1,19 +1,79 @@
 # Déploiement OpenStack avec DevStack
+Ce guide documente les étapes complètes pour préparer un serveur, 
+installer et déployer OpenStack via DevStack sur Debian 12 (Bookworm).
 
-Ce guide documente les étapes complètes pour préparer un serveur, installer et déployer OpenStack en utilisant **DevStack** sur un **OS DEBIAN 12, 13**.
+> ⚠️ Debian 13 (Trixie) est encore en phase de test — préférer Debian 12 
+> pour un environnement stable.
+
 
 ## Prérequis généraux
 
-### Ressources : Recommandations minimales par nœud :
-Tout d'abord, configurez une machine virtuelle de votre choix avec au moins **8 Go de RAM** et **4 vCPU** **100 Go d'espace disque**. Assurez-vous qu'elle est à jour. Installez **Git** et tout autre outil de développement utile.
+### Ressources minimales recommandées
+| Rôle        | RAM    | vCPU | Disque |
+|-------------|--------|------|--------|
+| Contrôleur  | 8 Go   | 4    | 100 Go |
+| Compute     | 4 Go   | 2    | 50 Go  |
 
 ---
 
-## 1. Préparation du système (A faire sur les 2 machines 1 contrôleur + 1 compute)
+## 1. Préparation du système
+> À effectuer sur les 2 machines (contrôleur + compute)
 
-```bash
-sudo apt update -y && apt upgrade -y
-```
+### Étape 1 : Configuration réseau statique
+Passer en root (sudo non installé par défaut sur Debian) :
+
+    su -
+
+Vérifier le nom de vos interfaces réseau :
+
+    ip a
+
+Éditer la configuration :
+
+    nano /etc/network/interfaces
+
+#### Avant (DHCP) :
+    allow-hotplug ens33
+    iface ens33 inet dhcp
+    iface ens33 inet6 auto
+
+#### Après (IP statique) :
+
+    # Interface de management (ens33)
+    # Contrôleur : 172.20.10.3 | Compute : 172.20.10.4
+    allow-hotplug ens33
+    iface ens33 inet static
+        address 172.20.10.3        # ← adapter selon le nœud
+        netmask 255.255.255.240
+        gateway 172.20.10.1
+        dns-nameservers 8.8.8.8 1.1.1.1
+
+    # Interface bridge externe (ens34) — sans IP, gérée par OpenStack
+    allow-hotplug ens34
+    iface ens34 inet manual
+        up ip link set dev $IFACE up
+        down ip link set dev $IFACE down
+
+Sauvegarder : Ctrl+O → Entrée → Ctrl+X
+
+Appliquer :
+
+    systemctl restart networking
+
+Vérifier :
+
+    ip a
+    ip route
+
+### Étape 2 : Mises à jour système
+
+    apt update && apt upgrade -y
+
+
+
+
+
+
 
 ### Créer l'utilisateur stack
 
@@ -60,39 +120,7 @@ Vérifier :
 cat /sys/module/kvm_intel/parameters/nested
 ```
 
-## 2. Réseautage
 
-### Afficher les interfaces réseau
-
-```bash
-ip a
-```
-
-Exemple de configuration :
-
-```bash
-sudo nano /etc/network/interfaces
-
-# Interface physique pour le management (ens33)
-allow-hotplug ens33
-iface ens33 inet static
-    address 192.168.1.121/24
-    gateway 192.168.1.254
-    dns-nameservers 8.8.8.8 8.8.4.4
-
-# Interface physique pour le bridge externe (ens34) - pas d'IP
-allow-hotplug ens34
-iface ens34 inet manual
-    up ip link set dev $IFACE up
-    down ip link set dev $IFACE down    
-```
-
-Redémarrer :
-
-```bash
-# Appliquer la nouvelle configuration
-sudo systemctl restart networking
-```
 
 ## 3. Stockage (A faire sur la machine contrôleur)
 
