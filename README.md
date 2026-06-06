@@ -101,8 +101,8 @@ Avant de continuer, vérifier les ressources disponibles :
 
 Installer l'outil de vérification :
 
-    apt install cpu-checker -y
-    kvm-ok
+    sudo apt install cpu-checker -y
+    sudo kvm-ok
 
 Vérifier si les modules sont déjà chargés :
 
@@ -110,12 +110,12 @@ Vérifier si les modules sont déjà chargés :
 
 #### Pour processeur Intel :
 
-    modprobe kvm-intel
-    echo 'options kvm-intel nested=1' | tee /etc/modprobe.d/kvm-intel.conf
+    sudo modprobe kvm-intel
+    echo 'options kvm-intel nested=1' | sudo tee /etc/modprobe.d/kvm-intel.conf
 
 Rendre le module permanent au démarrage :
 
-    echo 'kvm-intel' >> /etc/modules
+    echo 'kvm-intel' | sudo tee -a /etc/modules
 
 Vérifier que la virtualisation imbriquée est active :
 
@@ -124,12 +124,12 @@ Vérifier que la virtualisation imbriquée est active :
 
 #### Pour processeur AMD :
 
-    modprobe kvm-amd
-    echo 'options kvm-amd nested=1' | tee /etc/modprobe.d/kvm-amd.conf
+    sudo modprobe kvm-amd
+    echo 'options kvm-amd nested=1' | sudo tee /etc/modprobe.d/kvm-amd.conf
 
 Rendre le module permanent au démarrage :
 
-    echo 'kvm-amd' >> /etc/modules
+    echo 'kvm-amd' | sudo tee -a /etc/modules
 
 Vérifier que la virtualisation imbriquée est active :
 
