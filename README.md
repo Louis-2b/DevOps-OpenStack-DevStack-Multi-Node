@@ -48,9 +48,9 @@ Vérifier le nom de vos interfaces réseau :
         gateway 172.20.10.1
         dns-nameservers 8.8.8.8 1.1.1.1
 
-    # Interface bridge externe (ens34) — sans IP, gérée par OpenStack
-    allow-hotplug ens34
-    iface ens34 inet manual
+    # Interface bridge externe (ens36) — sans IP, gérée par OpenStack
+    allow-hotplug ens36
+    iface ens36 inet manual
         up ip link set dev $IFACE up
         down ip link set dev $IFACE down
 
@@ -65,60 +65,97 @@ Vérifier :
     ip a
     ip route
 
-### Étape 2 : Mises à jour système
+### Étape 2 : Installation de sudo et configuration
 
-    apt update && apt upgrade -y
+Par défaut sur Debian, sudo n'est pas installé. En tant que root :
+
+    apt install sudo -y
+
+Ajouter votre utilisateur principal au groupe sudo (optionnel) :
+
+    usermod -aG sudo <votre_utilisateur>
+
+Appliquer les mises à jour système :   
+
+    sudo apt update && sudo apt upgrade -y
+
+---
 
 
+### Étape 3 : Informations et vérification du système
 
+Avant de continuer, vérifier les ressources disponibles :
 
+    lsb_release -a      # version Debian
+    nproc               # nombre de CPUs
+    free -mh            # mémoire disponible
+    df -h /             # espace disque
+    id                  # utilisateur courant
 
+---
 
+### Étape 4 : Vérification et activation de KVM
 
-### Créer l'utilisateur stack
+Installer l'outil de vérification :
 
-```bash
-sudo useradd -s /bin/bash -d /opt/stack -m stack
-echo "stack ALL=(ALL) NOPASSWD: ALL" | sudo tee /etc/sudoers.d/stack
-```
+    apt install cpu-checker -y
+    kvm-ok
 
-### Informations système
+Vérifier si les modules sont déjà chargés :
 
-```bash
-lsb_release -a
-id
-nproc
-free -mh
-```
+    lsmod | grep kvm
 
-### Vérification KVM
+#### Pour processeur Intel :
 
-```bash
-sudo apt install cpu-checker -y
-sudo kvm-ok
-```
-Pour processeur AMD
+    modprobe kvm-intel
+    echo 'options kvm-intel nested=1' | tee /etc/modprobe.d/kvm-intel.conf
 
-```bash
-sudo modprobe kvm-amd
-echo 'options kvm-amd nested=1' | sudo tee -a /etc/modprobe.d/kvm-amd.conf
-sudo modprobe -r kvm-amd
-sudo modprobe kvm-amd
-```
-Pour processeur Intel
+Rendre le module permanent au démarrage :
 
-```bash
-sudo modprobe kvm-intel
-echo 'options kvm-intel nested=1' | sudo tee -a /etc/modprobe.d/kvm-intel.conf
-sudo modprobe -r kvm-intel
-sudo modprobe kvm-intel
-```
+    echo 'kvm-intel' >> /etc/modules
+
+Vérifier que la virtualisation imbriquée est active :
+
+    cat /sys/module/kvm_intel/parameters/nested
+    # Résultat attendu : Y ou 1
+
+#### Pour processeur AMD :
+
+    modprobe kvm-amd
+    echo 'options kvm-amd nested=1' | tee /etc/modprobe.d/kvm-amd.conf
+
+Rendre le module permanent au démarrage :
+
+    echo 'kvm-amd' >> /etc/modules
+
+Vérifier que la virtualisation imbriquée est active :
+
+    cat /sys/module/kvm_amd/parameters/nested
+    # Résultat attendu : Y ou 1
+
+---
+
+### Étape 5 : Création de l'utilisateur stack
+
+DevStack doit être exécuté avec un utilisateur dédié (jamais en root) :
+
+    useradd -s /bin/bash -d /opt/stack -m stack
+    echo "stack ALL=(ALL) NOPASSWD: ALL" | tee /etc/sudoers.d/stack
+    chmod 0440 /etc/sudoers.d/stack        # sécuriser le fichier sudoers
+
+Basculer vers l'utilisateur stack :
+
+    su - stack
 
 Vérifier :
 
-```bash
-cat /sys/module/kvm_intel/parameters/nested
-```
+    whoami        # doit afficher : stack
+    sudo -l       # doit afficher les droits NOPASSWD
+
+
+---
+
+
 
 
 
