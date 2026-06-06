@@ -65,6 +65,9 @@ Vérifier :
     ip a
     ip route
 
+---
+
+
 ### Étape 2 : Installation de sudo et configuration
 
 Par défaut sur Debian, sudo n'est pas installé. En tant que root :
