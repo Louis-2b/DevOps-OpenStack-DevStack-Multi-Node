@@ -2,7 +2,7 @@
 Ce guide documente les étapes complètes pour préparer un serveur, 
 installer et déployer OpenStack via DevStack sur Debian 12 (Bookworm).
 
-> ⚠️ Debian 13 (Trixie) est encore en phase de test — préférer Debian 12 
+> Debian 13 (Trixie) est encore en phase de test — préférer Debian 12 
 > pour un environnement stable.
 
 
