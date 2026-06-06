@@ -142,13 +142,15 @@ Vérifier que la virtualisation imbriquée est active :
 
 DevStack doit être exécuté avec un utilisateur dédié (jamais en root) :
 
-    useradd -s /bin/bash -d /opt/stack -m stack
-    echo "stack ALL=(ALL) NOPASSWD: ALL" | tee /etc/sudoers.d/stack
-    chmod 0440 /etc/sudoers.d/stack        # sécuriser le fichier sudoers
+    sudo useradd -s /bin/bash -d /opt/stack -m stack
+    echo "stack ALL=(ALL) NOPASSWD: ALL" | sudo tee /etc/sudoers.d/stack
+    sudo chmod 0440 /etc/sudoers.d/stack        # sécuriser le fichier sudoers
 
 Basculer vers l'utilisateur stack :
 
-    su - stack
+    sudo su - stack
+    # ou
+    sudo -i -u stack
 
 Vérifier :
 
