@@ -86,7 +86,7 @@ Ajouter votre utilisateur principal au groupe sudo (optionnel) :
 
 Appliquer les mises à jour système :
 
-    apt update && apt upgrade -y
+    sudo apt update && apt upgrade -y
 
 ---
 
@@ -106,8 +106,9 @@ Avant de continuer, vérifier les ressources disponibles :
 
 Installer les outils de vérification :
 
-    apt install qemu-kvm -y
-    virt-host-validate
+    sudo apt install qemu-kvm -y
+    sudo apt install libvirt-clients -y
+    sudo virt-host-validate
 
 > ✅ Résultat attendu : PASS sur les lignes QEMU et KVM.
 > ❌ Si FAIL sur KVM : la virtualisation n'est pas activée dans le BIOS.
@@ -119,11 +120,11 @@ Vérifier si les modules sont déjà chargés :
 #### Pour processeur Intel :
 
     modprobe kvm-intel
-    echo 'options kvm-intel nested=1' | tee /etc/modprobe.d/kvm-intel.conf
+    echo 'options kvm-intel nested=1' | sudo tee /etc/modprobe.d/kvm-intel.conf
 
 Rendre le module permanent au démarrage :
 
-    echo 'kvm-intel' | tee -a /etc/modules
+    echo 'kvm-intel' | sudo tee -a /etc/modules
 
 Vérifier que la virtualisation imbriquée est active :
 
@@ -133,11 +134,11 @@ Vérifier que la virtualisation imbriquée est active :
 #### Pour processeur AMD :
 
     modprobe kvm-amd
-    echo 'options kvm-amd nested=1' | tee /etc/modprobe.d/kvm-amd.conf
+    echo 'options kvm-amd nested=1' | sudo tee /etc/modprobe.d/kvm-amd.conf
 
 Rendre le module permanent au démarrage :
 
-    echo 'kvm-amd' | tee -a /etc/modules
+    echo 'kvm-amd' | sudo tee -a /etc/modules
 
 Vérifier que la virtualisation imbriquée est active :
 
@@ -150,13 +151,13 @@ Vérifier que la virtualisation imbriquée est active :
 
 DevStack doit être exécuté avec un utilisateur dédié (jamais en root) :
 
-    useradd -s /bin/bash -d /opt/stack -m stack
-    echo "stack ALL=(ALL) NOPASSWD: ALL" | tee /etc/sudoers.d/stack
-    chmod 0440 /etc/sudoers.d/stack
+    sudo useradd -s /bin/bash -d /opt/stack -m stack
+    echo "stack ALL=(ALL) NOPASSWD: ALL" | sudo tee /etc/sudoers.d/stack
+    sudo chmod 0440 /etc/sudoers.d/stack
 
 Basculer vers l'utilisateur stack :
 
-    su - stack
+    sudo su - stack
 
 Vérifier :
 
