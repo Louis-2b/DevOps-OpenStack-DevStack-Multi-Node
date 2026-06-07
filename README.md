@@ -167,23 +167,66 @@ Vérifier :
 ---
 
 
+## 2. Configuration du stockage
 
+### Sur le CONTRÔLEUR — Cinder (volumes bloc)
 
-## 3. Stockage (A faire sur la machine contrôleur)
+#### Vérification des disques disponibles
 
-### Liste des disques
+    lsblk
 
-```bash
-lsblk
-```
+> Résultat attendu : sda (système) + sdb (vierge, sans partition)
 
-### Configuration LVM pour Cinder 
+Vérifier que sdb est bien vierge :
 
-```bash
-sudo pvcreate /dev/sdb
-sudo vgcreate cinder-volumes /dev/sdb
-sudo vgs
-```
+    wipefs -a /dev/sdb        # efface toute signature existante
+
+#### Configuration LVM pour Cinder
+
+    pvcreate /dev/sdb
+    vgcreate cinder-volumes /dev/sdb
+
+Vérifier :
+
+    pvs        # affiche le volume physique
+    vgs        # affiche le groupe de volumes
+
+> Résultat attendu :
+>   VG             #PV  #LV  #SN  Attr  VSize  VFree
+>   cinder-volumes   1    0    0  wz--n  XX.XXg  XX.XXg
+
+---
+
+### Sur le COMPUTE — Nova (disques éphémères des VMs)
+
+#### Vérification des disques disponibles
+
+    lsblk
+
+> Résultat attendu : sda (système) + sdb (vierge)
+
+#### Formatage et montage de sdb pour Nova
+
+    mkfs.ext4 /dev/sdb
+
+Créer le point de montage :
+
+    mkdir -p /opt/stack/data/nova/instances
+
+Monter le disque :
+
+    mount /dev/sdb /opt/stack/data/nova/instances
+
+Rendre le montage permanent au redémarrage :
+
+    echo '/dev/sdb /opt/stack/data/nova/instances ext4 defaults 0 2' >> /etc/fstab
+
+Vérifier :
+
+    df -h /opt/stack/data/nova/instances
+
+---
+
 
 ## 4. SSH (A faire sur la machine contrôleur)
 ###  Génération de la paire de clés SSH (Ed25519 recommandé pour la sécurité)
