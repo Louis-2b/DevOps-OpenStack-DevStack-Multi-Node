@@ -119,7 +119,7 @@ Vérifier si les modules sont déjà chargés :
 
 #### Pour processeur Intel :
 
-    modprobe kvm-intel
+    sudo modprobe kvm-intel
     echo 'options kvm-intel nested=1' | sudo tee /etc/modprobe.d/kvm-intel.conf
 
 Rendre le module permanent au démarrage :
@@ -167,11 +167,11 @@ Vérifier :
 ---
 
 
-## 2. Configuration du stockage
+### Étape 6 : Configuration du stockage
 
-### Sur le CONTRÔLEUR — Cinder (volumes bloc)
+#### Sur le CONTRÔLEUR — Cinder (volumes bloc)
 
-#### Vérification des disques disponibles
+Vérification des disques disponibles
 
     lsblk
 
@@ -179,17 +179,18 @@ Vérifier :
 
 Vérifier que sdb est bien vierge :
 
-    wipefs -a /dev/sdb        # efface toute signature existante
+    sudo wipefs -a /dev/sdb        # efface toute signature existante
 
 #### Configuration LVM pour Cinder
 
-    pvcreate /dev/sdb
-    vgcreate cinder-volumes /dev/sdb
+    sudo apt install lvm2 -y
+    sudo pvcreate /dev/sdb
+    sudo vgcreate cinder-volumes /dev/sdb
 
 Vérifier :
 
-    pvs        # affiche le volume physique
-    vgs        # affiche le groupe de volumes
+    sudo pvs        # affiche le volume physique
+    sudo vgs        # affiche le groupe de volumes
 
 > Résultat attendu :
 >   VG             #PV  #LV  #SN  Attr  VSize  VFree
@@ -197,9 +198,9 @@ Vérifier :
 
 ---
 
-### Sur le COMPUTE — Nova (disques éphémères des VMs)
+#### Sur le COMPUTE — Nova (disques éphémères des VMs)
 
-#### Vérification des disques disponibles
+Vérification des disques disponibles
 
     lsblk
 
@@ -207,34 +208,38 @@ Vérifier :
 
 #### Formatage et montage de sdb pour Nova
 
-    mkfs.ext4 /dev/sdb
+    sudo mkfs.ext4 /dev/sdb
 
 Créer le point de montage :
 
-    mkdir -p /opt/stack/data/nova/instances
+    sudo mkdir -p /opt/stack/data/nova/instances
 
 Monter le disque :
 
-    mount /dev/sdb /opt/stack/data/nova/instances
+    sudo mount /dev/sdb /opt/stack/data/nova/instances
 
 Rendre le montage permanent au redémarrage :
 
-    echo '/dev/sdb /opt/stack/data/nova/instances ext4 defaults 0 2' >> /etc/fstab
+    echo '/dev/sdb /opt/stack/data/nova/instances ext4 defaults 0 2' | sudo tee -a /etc/fstab
 
-Vérifier :
+Vérifier que la ligne a bien été ajoutée :
+
+    cat /etc/fstab
+    
+Puis vérifier le montage :
 
     df -h /opt/stack/data/nova/instances
 
 ---
 
 
-## 3. Configuration SSH et installation de DevStack
+### Étape 7 : Configuration SSH et installation de DevStack
 
-### Sur le CONTRÔLEUR — Génération de la paire de clés SSH
+#### Sur le CONTRÔLEUR — Génération de la paire de clés SSH
 
 Se connecter en tant que stack :
 
-    su - stack
+    sudo su - stack
 
 Générer la paire de clés (Ed25519 recommandé) :
 
@@ -245,342 +250,438 @@ Générer la paire de clés (Ed25519 recommandé) :
 
 Copier la clé publique vers le nœud compute :
 
-    ssh-copy-id -i ~/.ssh/devstack.pub stack@172.20.10.5
+    ssh-copy-id -i ~/.ssh/devstack.pub diegosoda@172.20.10.5
 
 Tester la connexion :
 
-    ssh -i ~/.ssh/devstack stack@172.20.10.5
+    ssh -i ~/.ssh/devstack diegosoda@172.20.10.6
 
 > ✅ Résultat attendu : connexion sans mot de passe.
 
 ---
 
-### Sur les 2 machines — Installation des dépendances
+#### Sur les 2 machines — Installation des dépendances
 
 En tant que root :
 
-    apt install -y git python3-pip python3-dev python3-venv \
+    sudo apt install -y git python3-pip python3-dev python3-venv \
         libffi-dev libssl-dev libpq-dev \
         gcc bridge-utils lvm2 thin-provisioning-tools
 
 ---
 
-### Sur les 2 machines — Clonage de DevStack
+#### Sur les 2 machines — Clonage de DevStack
 
 Basculer vers l'utilisateur stack :
 
-    su - stack
+    sudo su - stack
 
 Cloner DevStack directement dans /opt/stack :
 
     git clone https://opendev.org/openstack/devstack /opt/stack/devstack
-    cd /opt/stack/devstack
-
-Vérifier la version clonée :
-
-    git log --oneline -5
 
 ---
 
-### Vérification de la connectivité entre les nœuds
+#### Vérification de la connectivité entre les nœuds
 
 Depuis le contrôleur vers le compute :
 
-    ping -c 3 172.20.10.5
+    ping -c 3 172.20.10.6
 
 Depuis le compute vers le contrôleur :
 
-    ping -c 3 172.20.10.3
+    ping -c 3 172.20.10.5
 
 > ✅ Les deux doivent répondre avant de continuer.
 
 ---
 
 
-# Étapes d’installation
+## 4. Installation de DevStack
 
-## 1. Configuration du nœud contrôleur
-Le nœud contrôleur exécute tous les services OpenStack.
+### Sur le CONTRÔLEUR
 
-### Créer le fichier de configuration local.conf
-Modifiez votre /opt/stack/devstack/local.conf pour qu'il ressemble à :
+#### Étape 8 : Créer le fichier local.conf
 
-```bash
-[[local|localrc]]
+Se connecter en tant que stack :
 
-# +++++++++++++++++++++
-# CONFIGURATION RESEAU
-# +++++++++++++++++++++
-HOST_IP=192.168.1.121
-SERVICE_HOST=192.168.1.121
+    sudo su - stack
+    cd /opt/stack/devstack
 
-# Plage réseau interne (pour les instances)
-FIXED_RANGE=10.0.1.0/24
-FIXED_NETWORK_SIZE=256
+Générer la clé KEK pour Barbican avant de créer le fichier :
 
-# Plage d’adresses IP flottantes
-FLOATING_RANGE=192.168.1.122/27
-Q_FLOATING_ALLOCATION_POOL=start=192.168.1.123,end=192.168.1.130
+    python3 -c "import os,base64; print(base64.urlsafe_b64encode(os.urandom(32)).decode())"
 
-# interface reliée au LAN externe
-PUBLIC_INTERFACE=ens34
-FLAT_INTERFACE=$PUBLIC_INTERFACE
+> ⚠️ Copier la clé générée — elle sera à coller dans le champ `kek` 
+> du fichier local.conf ci-dessous.
 
-# Serveurs DNS pour les instances
-PUBLIC_NETWORK_GATEWAY=192.168.1.1
-DNS_SERVERS=8.8.8.8,8.8.4.4
+Créer le fichier de configuration :
 
-# ++++++++++++++++++++++++++++
-# AUTHENTIFICATION & SECURITE
-# ++++++++++++++++++++++++++++
-ADMIN_PASSWORD=password
-DATABASE_PASSWORD=password
-RABBIT_PASSWORD=password
-SERVICE_PASSWORD=password
-SERVICE_TOKEN=password
+    sudo nano /opt/stack/devstack/local.conf
 
-# ++++++++++++++++++++
-# Keystone (Identity)
-# ++++++++++++++++++++
-KEYSTONE_TOKEN_FORMAT=fernet
-KEYSTONE_CATALOG_BACKEND=sql
+Contenu du fichier (remplacer `REMPLACER_PAR_CLE_GENEREE` par la clé copiée) :
 
-# +++++++++++++++++++++++++
-# CONFIGURATION MULTI-NOEUD
-# +++++++++++++++++++++++++
-MULTI_HOST=1
+    # ++++++++++++++++++++++++++++++++++++
+    # ++++ Local controller · CONF(1) ++++
+    # ++++++++++++++++++++++++++++++++++++
 
-# +++++++++++++++++++++
-# LOGS & MO?ITORING
-# +++++++++++++++++++++
-DEBUG=True
-VERBOSE=True
-DEST=/opt/stack
-LOGFILE=$DEST/logs/stack.sh.log
-SCREEN_LOGDIR=/opt/stack/logs
-SYSLOG=True
-LOG_COLOR=True
-LOGDAYS=7
-ENABLE_DEBUG_LOG_LEVEL=True
+    [[local|localrc]]
 
-# +++++++++++++++++++++++++++
-# SERVICES CORE - CONTRÔLEUR
-# +++++++++++++++++++++++++++
-ENABLED_SERVICES=rabbit,mysql,key
+    # ++++++++++++++++++++
+    # CONFIGURATION RESEAU
+    # ++++++++++++++++++++
+    HOSTNAME=controller
+    HOST_IP=172.20.10.5
+    SERVICE_HOST=172.20.10.5
 
-# ++++++++++++++++++++++++
-# HORIZON – INTERFACE WEB
-# ++++++++++++++++++++++++
-ENABLED_SERVICES+=,horizon
+    # Réseau interne des VMs
+    FIXED_RANGE=10.0.1.0/24
+    FIXED_NETWORK_SIZE=256
 
-# ++++++++++++++++++++++++
-# GLANCE – IMAGE SERVICE
-# ++++++++++++++++++++++++
-ENABLED_SERVICES+=,g-api,g-reg
+    # Floating IPs — plage dédiée hors IPs machines
+    # Contrôleur=.5 | Compute=.6 | Floating=.9 à .17
+    FLOATING_RANGE=172.20.10.9/28
+    Q_FLOATING_ALLOCATION_POOL=start=172.20.10.9,end=172.20.10.17
 
-# ++++++++++++++++++++++++
-# NOVA – COMPUTE SERVICE
-# ++++++++++++++++++++++++
-ENABLED_SERVICES+=,n-api,n-crt,n-cpu,n-cond,n-sch,n-api-meta,n-sproxy,n-novnc n-cauth,placement-api,placement-client,n-net
-LIBVIRT_TYPE=qemu
+    PUBLIC_INTERFACE=ens36
+    FLAT_INTERFACE=$PUBLIC_INTERFACE
 
-# +++++++++
-# NEUTRON
-# +++++++++
-enable_plugin neutron https://opendev.org/openstack/neutron
-ENABLED_SERVICES+=,neutron,q-svc,q-agt,q-dhcp,q-l3,q-meta,q-lbaas
+    PUBLIC_NETWORK_GATEWAY=172.20.10.1
+    DNS_SERVERS=8.8.8.8,1.1.1.1
 
-# CONFIGURATION NEUTRON (RÉSEAU)
-Q_AGENT=openvswitch
-Q_ML2_TENANT_NETWORK_TYPE=vxlan
-Q_ML2_PLUGIN_MECHANISM_DRIVERS=openvswitch,l2population
-Q_ML2_PLUGIN_TYPE_DRIVERS=flat,vlan,vxlan
-Q_ML2_PLUGIN_EXT_DRIVERS=port_security
+    # +++++++++++++++++++++++++++
+    # AUTHENTIFICATION & SECURITE
+    # +++++++++++++++++++++++++++
+    ADMIN_PASSWORD=password
+    DATABASE_PASSWORD=password
+    RABBIT_PASSWORD=password
+    SERVICE_PASSWORD=password
 
-# +++++++++++++++++++++++++++++++
-# CINDER – BLOCK DEVICE SERVICE
-# +++++++++++++++++++++++++++++++
-ENABLED_SERVICES+=,cinder,c-api,c-vol,c-sch,c-bak
-#CINDER_DRIVER=ceph
-#CINDER_ENABLED_BACKENDS=ceph
+    # +++++++++++++++++++
+    # Keystone (Identity)
+    # +++++++++++++++++++
+    KEYSTONE_TOKEN_FORMAT=fernet
+    KEYSTONE_CATALOG_BACKEND=sql
 
-# +++++++++++++++++++++++
-# SWIFT (Object Storage)
-# +++++++++++++++++++++++
-ENABLED_SERVICES+=,swift
-ENABLED_SERVICES+=,s-proxy s-object s-container s-account
-SWIFT_HASH=$(openssl rand -hex 16)
-SWIFT_REPLICAS=1
-SWIFT_DATA_DIR=$DEST/data/swift
+    # +++++++++++++++++++++++++
+    # CONFIGURATION MULTI-NOEUD
+    # +++++++++++++++++++++++++
+    MULTI_HOST=1
 
-# +++++++++++++++++++++++++++++
-# Designate (DNS as a Service)
-# +++++++++++++++++++++++++++++
-enable_plugin designate https://opendev.org/openstack/designate
-enable_plugin designate-dashboard https://opendev.org/openstack/designate-dashboard
-ENABLED_SERVICES+=,designate,designate-central,designate-api,designate-worker,designate-producer,designate-mdns
+    # +++++++++++++++++
+    # LOGS & MONITORING
+    # +++++++++++++++++
+    DEBUG=True
+    VERBOSE=True
+    DEST=/opt/stack
+    LOGFILE=$DEST/logs/stack.sh.log
+    SCREEN_LOGDIR=$DEST/logs
+    SYSLOG=False
+    LOG_COLOR=True
+    LOGDAYS=7
 
-# +++++++++++++++++++++
-# HEAT (Orchestration)
-# +++++++++++++++++++++
-enable_plugin heat https://opendev.org/openstack/heat
-ENABLED_SERVICES+=,h-eng h-api h-api-cfn h-api-cw
+    # ++++++++++++++++++++++++++
+    # SERVICES CORE - CONTROLEUR
+    # ++++++++++++++++++++++++++
+    ENABLED_SERVICES=rabbit,mysql,key
 
-# +++++++++++++++++++++++++
-# OCTAVIA (Load Balancing)
-# +++++++++++++++++++++++++
-enable_plugin octavia https://opendev.org/openstack/octavia
-# Si vous activez Horizon, incluez le tableau de bord Octavia
-enable_plugin octavia-dashboard https://opendev.org/openstack/octavia-dashboard.git
-ENABLED_SERVICES+=,octavia,o-cw,o-hk,o-hm,o-api
+    # +++++++++++++++++++++++
+    # HORIZON - INTERFACE WEB
+    # +++++++++++++++++++++++
+    ENABLED_SERVICES+=,horizon
 
-# ++++++++++++++++++++++++++
-# Barbican (Key Management)
-# ++++++++++++++++++++++++++
-# Si vous activez Barbican pour le déchargement TLS dans Octavia, incluez-le ici
-enable_plugin barbican https://opendev.org/openstack/barbican
-# Barbican - Utilisé en option pour le déchargement TLS dans Octavia
-ENABLED_SERVICES+=,barbican
+    # +++++++++++++++++++++++++++++++++++
+    # GLANCE - IMAGE SERVICE
+    # g-reg retiré (déprécié depuis Yoga)
+    # +++++++++++++++++++++++++++++++++++
+    ENABLED_SERVICES+=,g-api
 
-# ++++++++++++++++++++++++++++
-# Manila (Shared Filesystems)
-# ++++++++++++++++++++++++++++
-enable_plugin manila https://github.com/openstack/manila
-enable_plugin manila-ui https://github.com/openstack/manila-ui
+    # +++++++++++++++++++++++++++++++++++++++++++++
+    # NOVA - COMPUTE SERVICE
+    # n-cpu retiré du contrôleur (rôle du compute)
+    # n-sproxy et n-cauth retirés (dépréciés Yoga+)
+    # +++++++++++++++++++++++++++++++++++++++++++++
+    ENABLED_SERVICES+=,n-api,n-crt,n-cond,n-sch,n-api-meta,n-novnc,placement-api,placement-client
 
-# +++++
-# CEPH 
-# +++++
-#enable_plugin devstack-plugin-ceph https://github.com/openstack/devstack-plugin-ceph
-#ENABLED_SERVICES=ceph
+    # KVM si CPU hôte le supporte, sinon qemu
+    LIBVIRT_TYPE=kvm
 
-# DevStack créera un disque en boucle formaté en XFS pour stocker les
-# Ceph data.
-#CEPH_LOOPBACK_DISK_SIZE=30G
-#CEPH_CONF=/etc/ceph/ceph.conf
+    # +++++++
+    # NEUTRON
+    # +++++++
+    enable_plugin neutron https://opendev.org/openstack/neutron
+    ENABLED_SERVICES+=,neutron,q-svc,q-agt,q-dhcp,q-l3,q-meta
 
-# Ceph cluster fsid
-#CEPH_FSID=$(uuidgen)
+    Q_AGENT=openvswitch
+    Q_ML2_PLUGIN_TENANT_NETWORK_TYPES=vxlan
+    Q_ML2_PLUGIN_MECHANISM_DRIVERS=openvswitch,l2population
+    Q_ML2_PLUGIN_TYPE_DRIVERS=flat,vlan,vxlan
+    Q_ML2_PLUGIN_EXT_DRIVERS=port_security
+    Q_ML2_PLUGIN_VNI_RANGES=1:1000
 
-# Glance pool, pgs and user
-#GLANCE_CEPH_USER=glance
-#GLANCE_CEPH_POOL=glance
-#GLANCE_CEPH_POOL_PG=8
-#GLANCE_CEPH_POOL_PGP=8
+    # +++++++++++++++++++++++++++++
+    # CINDER - BLOCK DEVICE SERVICE
+    # +++++++++++++++++++++++++++++
+    ENABLED_SERVICES+=,cinder,c-api,c-vol,c-sch,c-bak
 
-# Nova pool and pgs
-#NOVA_CEPH_POOL=nova
-#NOVA_CEPH_POOL_PG=8
-#NOVA_CEPH_POOL_PGP=8
+    CINDER_ENABLED_BACKENDS=lvm:cinder-volumes
+    VOLUME_GROUP=cinder-volumes
+    VOLUME_NAME_PREFIX=volume-
 
-# Cinder pool, pgs and user
-#CINDER_DRIVER=ceph
-#CINDER_CEPH_POOL=cinder
-#CINDER_CEPH_USER=cinder
-#CINDER_CEPH_UUID=$(uuidgen)
-#CINDER_CEPH_POOL_PG=8
-#CINDER_CEPH_POOL_PGP=8
+    # ++++++++++++++++++++++
+    # SWIFT (Object Storage)
+    # ++++++++++++++++++++++
+    ENABLED_SERVICES+=,swift,s-proxy,s-object,s-container,s-account
+    SWIFT_HASH=a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6
+    SWIFT_REPLICAS=1
+    SWIFT_DATA_DIR=$DEST/data/swift
 
-# Cinder backup pool, pgs and user
-#CINDER_BAK_CEPH_POOL=backup
-#CINDER_BAK_CEPH_POOL_PG=8
-#CINDER_BAKCEPH_POOL_PGP=8
-#CINDER_BAK_CEPH_USER=cinder-bak
+    # ++++++++++++++++++++
+    # HEAT (Orchestration)
+    # ++++++++++++++++++++
+    enable_plugin heat https://opendev.org/openstack/heat
+    ENABLED_SERVICES+=,h-eng,h-api,h-api-cfn
 
-# Combien de répliques doivent être configurées pour votre cluster Ceph
-#CEPH_REPLICAS=${CEPH_REPLICAS:-1}
+    # ++++++++++++++++++++++++
+    # OCTAVIA (Load Balancing)
+    # ++++++++++++++++++++++++
+    enable_plugin octavia https://opendev.org/openstack/octavia
+    enable_plugin octavia-dashboard https://opendev.org/openstack/octavia-dashboard.git
+    ENABLED_SERVICES+=,octavia,o-cw,o-hk,o-hm,o-api
 
-# Connectez DevStack à un cluster Ceph existant
-#REMOTE_CEPH=False
-#REMOTE_CEPH_ADMIN_KEY_PATH=/etc/ceph/ceph.client.admin.keyring
+    OCTAVIA_AMP_IMAGE_NAME=amphora-image
+    OCTAVIA_AMP_FLAVOR_NAME=amphora-flavor
+    OCTAVIA_AMP_FLAVOR_RAM=1024
+    OCTAVIA_AMP_FLAVOR_VCPUS=1
+    OCTAVIA_AMP_FLAVOR_DISK=2
+    OCTAVIA_MANAGEMENT_NETWORK_NAME=lb-mgmt-net
+    OCTAVIA_MANAGEMENT_SUBNET_NAME=lb-mgmt-subnet
+    OCTAVIA_MANAGEMENT_SUBNET_CIDR=10.0.2.0/24
 
-# +++++++++++++++++++++++++++++++++++++
-# CONFIGURATION CINDER (BLOCK STORAGE)
-# +++++++++++++++++++++++++++++++++++++
-CINDER_ENABLED_BACKENDS=lvm:cinder-volumes
-VOLUME_GROUP=cinder-volumes
-VOLUME_NAME_PREFIX="volume-"
-VOLUME_BACKING_FILE_SIZE=0
+    # +++++++++++++++++++++++++++++++++
+    # BARBICAN (Key Management Service)
+    # +++++++++++++++++++++++++++++++++
+    enable_plugin barbican https://opendev.org/openstack/barbican
+    ENABLED_SERVICES+=,barbican
 
-# configuration du volume group pour cinder
-[[post-config|$CINDER_CONF]]
-[cinder-volumes]
-image_volume_cache_enabled = True
-volume_clear = zero
-lvm_type = auto
-target_prefix = iqn.2010-10.org.openstack:
-target_port = 3260
-target_protocol = iscsi
-target_helper = lioadm
-volume_group = cinder-volumes
-volume_driver = cinder.volume.drivers.lvm.LVMVolumeDriver
-volume_backend_name = cinder-volumes
+    # +++++++++++++++++++++++
+    # ZUN (Container Service)
+    # +++++++++++++++++++++++
+    enable_plugin devstack-plugin-container https://opendev.org/openstack/devstack-plugin-container
+    enable_plugin zun https://opendev.org/openstack/zun
+    enable_plugin zun-ui https://opendev.org/openstack/zun-ui
+    enable_plugin kuryr-libnetwork https://opendev.org/openstack/kuryr-libnetwork
 
-[DEFAULT]
-enabled_backends = cinder-volumes
-default_volume_type = cinder-volumes
-storage_availability_zone = nova
+    ZUN_IMAGE_NAME=cirros
+    ZUN_IMAGE_LOCATION=http://download.cirros-cloud.net/0.6.2/cirros-0.6.2-x86_64-disk.img
 
-# +++++++++++++++++++++
-# POST-CONFIG: NEUTRON
-# +++++++++++++++++++++
-[[POST6CONFIG|/$Q_PLUGIN_CONF_FILE]]
-[ml2]
-type_drivers=flat,vlan,vxlan
-tenant_network_type=vxlan
-mechanism_drivers=openvswitch,l2population
-extension_drivers=port_security
+    KURYR_PROCESS_EXTERNAL_CONNECTIVITY=False
+    KURYR_CAPABILITY_SCOPE=global
+    KURYR_CONFIG_FOR_NETWORK_NAME=public
+    KURYR_USE_DNSMASQ=True
 
-[ml2_type_vxlan]
-vni_ranges = 1:1000
+    ENABLED_SERVICES+=,zun-api,zun-compute,zun-wj,zun-db,kuryr-libnetwork
+    ENABLE_CONTAINERD_CRI=False
 
-[ml2_type_flat]
-flat_networks = public
+    # +++++++++++++++++++++++++++
+    # Manila (Shared Filesystems)
+    # +++++++++++++++++++++++++++
+    enable_plugin manila https://github.com/openstack/manila
+    enable_plugin manila-ui https://github.com/openstack/manila-ui
+    ENABLED_SERVICES+=,manila-api,manila-sch,manila-shr,manila-dat
 
-[ovs]
-bridge_mappings = public:br-ex
-local_ip=£HOST_IP
+    # ++++++++++++++++++++++++++++
+    # Designate (DNS as a Service)
+    # ++++++++++++++++++++++++++++
+    enable_plugin designate https://opendev.org/openstack/designate
+    enable_plugin designate-dashboard https://opendev.org/openstack/designate-dashboard
+    ENABLED_SERVICES+=,designate,designate-central,designate-api,designate-worker,designate-producer,designate-mdns
 
-[agent]
-tunnel_types=vxlan
-l2_population=True
+    # +++++++++++++++++++
+    # SERVICES DESACTIVES
+    # +++++++++++++++++++
+    disable_service tempest etcd3
 
-# +++++++++++++++++++++++++++++++
-# POST-CONFIG DESIGNATE (DNS)
-# +++++++++++++++++++++++++++++++
-[[post-config|$DESIGNATE_CONF]]
-[service:api]
-listen = 0.0.0.0:9001
-api_base_uri=http://$SERVICE_HOST:9001/
-auth_strategy=keystone
-enable_api_v2=True
-enable_api_admin=True
+    # ==========================================
+    # POST-CONFIG
+    # ==========================================
 
-[DEFAULT]
-debug=True
-default_pool_id=794ccc2c-d751-44fe-b57f-8894c9f5c842
+    [[post-config|$CINDER_CONF]]
+    [cinder-volumes]
+    image_volume_cache_enabled = True
+    volume_clear = zero
+    lvm_type = auto
+    target_prefix = iqn.2010-10.org.openstack:
+    target_port = 3260
+    target_protocol = iscsi
+    target_helper = lioadm
+    volume_group = cinder-volumes
+    volume_driver = cinder.volume.drivers.lvm.LVMVolumeDriver
+    volume_backend_name = cinder-volumes
 
-[service:worker]
-enabled=True
-notify=True
+    [DEFAULT]
+    enabled_backends = cinder-volumes
+    default_volume_type = cinder-volumes
+    storage_availability_zone = nova
 
-[service:mdns]
-enabled=True
+    [[post-config|/etc/neutron/plugins/ml2/ml2_conf.ini]]
+    [ml2]
+    type_drivers = flat,vlan,vxlan
+    tenant_network_types = vxlan
+    mechanism_drivers = openvswitch,l2population
+    extension_drivers = port_security
 
-# +++++++++++++++++++++++++++++++++++++++
-# CONFIGURATION OCTAVIA (LOAD BALANCER)
-# +++++++++++++++++++++++++++++++++++++++
-[[post-config|$OCTAVIA_CONF]]
-[controller_worker]
-amp_boot_network_list=$(neutron net-list | awk '/lb-mgmt-net/ {print $2}')
-amp_flavor_id=65
+    [ml2_type_vxlan]
+    vni_ranges = 1:1000
 
-[DEFAULT]
-debug=True
+    [ml2_type_flat]
+    flat_networks = public
 
-# Désactiver les services qui ne doivent pas tourner sur le contrôleur
-DISABLE_SERVICE+=,n-cpu q-agt tempest,etcd3,tempest
-```
+    [ovs]
+    bridge_mappings = public:br-ex
+    local_ip = 172.20.10.5
+
+    [agent]
+    tunnel_types = vxlan
+    l2_population = True
+
+    [[post-config|$DESIGNATE_CONF]]
+    [service:api]
+    listen = 0.0.0.0:9001
+    api_base_uri = http://172.20.10.5:9001/
+    auth_strategy = keystone
+    enable_api_v2 = True
+    enable_api_admin = True
+
+    [DEFAULT]
+    debug = True
+
+    [service:worker]
+    enabled = True
+    notify = True
+
+    [service:mdns]
+    enabled = True
+
+    [[post-config|$BARBICAN_CONF]]
+    [DEFAULT]
+    debug = True
+    host_href = http://172.20.10.5:9311
+
+    [secretstore]
+    enabled_secretstore_plugins = store_crypto
+
+    [crypto]
+    enabled_crypto_plugins = simple_crypto
+
+    [simple_crypto_plugin]
+    kek = REMPLACER_PAR_CLE_GENEREE
+
+    [keystone_authtoken]
+    auth_uri = http://172.20.10.5:5000
+    auth_url = http://172.20.10.5:5000
+    memcached_servers = 172.20.10.5:11211
+    auth_type = password
+    project_domain_name = Default
+    user_domain_name = Default
+    project_name = service
+    username = barbican
+    password = password
+
+    [[post-config|$ZUN_CONF]]
+    [DEFAULT]
+    debug = True
+    transport_url = rabbit://stackrabbit:password@172.20.10.5:5672/
+
+    [api]
+    host_ip = 0.0.0.0
+    port = 9517
+
+    [database]
+    connection = mysql+pymysql://root:password@172.20.10.5/zun
+
+    [keystone_authtoken]
+    auth_uri = http://172.20.10.5:5000
+    auth_url = http://172.20.10.5:5000
+    memcached_servers = 172.20.10.5:11211
+    auth_type = password
+    project_domain_id = default
+    user_domain_id = default
+    project_name = service
+    username = zun
+    password = password
+
+    [glance]
+    api_servers = http://172.20.10.5:9292
+
+    [neutron]
+    auth_url = http://172.20.10.5:5000
+    auth_type = password
+    project_domain_name = Default
+    user_domain_name = Default
+    region_name = RegionOne
+    project_name = service
+    username = neutron
+    password = password
+
+    [placement]
+    auth_url = http://172.20.10.5:5000
+    auth_type = password
+    project_domain_name = Default
+    user_domain_name = Default
+    region_name = RegionOne
+    project_name = service
+    username = placement
+    password = password
+
+    [docker]
+    docker_remote_api_url = unix:///var/run/docker.sock
+
+    [kuryr]
+    auth_url = http://172.20.10.5:5000
+    auth_type = password
+    project_domain_name = Default
+    user_domain_name = Default
+    project_name = service
+    username = kuryr
+    password = password
+
+Sauvegarder : Ctrl+O → Entrée → Ctrl+X
+
+---
+
+#### Étape 7 : Lancer l'installation du contrôleur
+
+> ⚠️ Vérifier avant de lancer :
+> - L'utilisateur courant est bien `stack` (`whoami`)
+> - Le VG Cinder est bien créé (`vgs`)
+> - La connectivité réseau est OK (`ping -c 3 172.20.10.6`)
+
+    cd /opt/stack/devstack
+    ./stack.sh
+
+> ⏱️ Durée estimée : 30 à 60 minutes selon la connexion internet.
+> Les logs sont disponibles dans : /opt/stack/logs/stack.sh.log
+
+---
+
+#### Étape 8 : Vérification post-installation du contrôleur
+
+    source /opt/stack/devstack/openrc admin admin
+    openstack service list          # liste tous les services enregistrés
+    openstack compute service list  # vérifie Nova
+    openstack network agent list    # vérifie Neutron
+    openstack volume service list   # vérifie Cinder
+
+> ✅ Tous les services doivent apparaître en état `up` ou `enabled`.
+
+Interface web Horizon accessible sur :
+
+    http://172.20.10.3/dashboard
+    Utilisateur : admin
+    Mot de passe : password
+
+
 
 ### Lancer l’installation
 
