@@ -12,7 +12,7 @@ installer et déployer OpenStack via DevStack sur Debian 12 (Bookworm).
 | Rôle           | RAM   | vCPU | Disque        |
 |----------------|-------|------|---------------|
 | Contrôleur     | 16 Go | 4    | 2x 100 Go SSD |
-| Compute        | 32 Go | 8    | 500 Go        |
+| Compute        | 32 Go | 8    | 2x 500 Go SSD |
 | Stockage Ceph  | 8 Go  | 2    | 3x 1 To       |  
 
 ---
