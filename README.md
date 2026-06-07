@@ -40,7 +40,7 @@ Vérifier le nom de vos interfaces réseau :
 #### Après (IP statique) :
 
     # Interface de management (ens33)
-    # Contrôleur : 172.20.10.3 | Compute : 172.20.10.4
+    # Contrôleur : 172.20.10.3 | Compute : 172.20.10.5
     allow-hotplug ens33
     iface ens33 inet static
         address 172.20.10.3        # ← adapter selon le nœud
