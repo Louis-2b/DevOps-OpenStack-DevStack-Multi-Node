@@ -502,9 +502,9 @@ Contenu du fichier (remplacer `REMPLACER_PAR_CLE_GENEREE` par la clé copiée) :
     # +++++++++++++++++++
     disable_service tempest etcd3
 
-    # ==========================================
+    # +++++++++++
     # POST-CONFIG
-    # ==========================================
+    # +++++++++++
 
     [[post-config|$CINDER_CONF]]
     [cinder-volumes]
@@ -650,7 +650,7 @@ Sauvegarder : Ctrl+O → Entrée → Ctrl+X
 
 ---
 
-#### Étape 7 : Lancer l'installation du contrôleur
+#### Étape 9 : Lancer l'installation du contrôleur
 
 > ⚠️ Vérifier avant de lancer :
 > - L'utilisateur courant est bien `stack` (`whoami`)
