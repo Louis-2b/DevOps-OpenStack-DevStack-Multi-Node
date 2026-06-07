@@ -2,17 +2,18 @@
 Ce guide documente les étapes complètes pour préparer un serveur, 
 installer et déployer OpenStack via DevStack sur Debian 12 (Bookworm).
 
-> Debian 13 (Trixie) est encore en phase de test — préférer Debian 12 
+> ⚠️ Debian 13 (Trixie) est encore en phase de test — préférer Debian 12 
 > pour un environnement stable.
-
 
 ## Prérequis généraux
 
-### Ressources minimales recommandées
-| Rôle        | RAM    | vCPU | Disque |
-|-------------|--------|------|--------|
-| Contrôleur  | 8 Go   | 4    | 100 Go |
-| Compute     | 4 Go   | 2    | 50 Go  |
+### Ressources recommandées
+
+| Rôle           | RAM   | vCPU | Disque     |
+|----------------|-------|------|------------|
+| Contrôleur     | 16 Go | 4    | 100 Go SSD |
+| Compute        | 32 Go | 8    | 500 Go     |
+| Stockage Ceph  | 8 Go  | 2    | 3x 1 To    |
 
 ---
 
@@ -20,6 +21,7 @@ installer et déployer OpenStack via DevStack sur Debian 12 (Bookworm).
 > À effectuer sur les 2 machines (contrôleur + compute)
 
 ### Étape 1 : Configuration réseau statique
+
 Passer en root (sudo non installé par défaut sur Debian) :
 
     su -
@@ -28,11 +30,15 @@ Vérifier le nom de vos interfaces réseau :
 
     ip a
 
+> ⚠️ Les noms d'interfaces peuvent varier (ens33, ens36, eth0...).
+> Adaptez les noms dans la configuration selon votre machine.
+
 Éditer la configuration :
 
     nano /etc/network/interfaces
 
 #### Avant (DHCP) :
+
     allow-hotplug ens33
     iface ens33 inet dhcp
     iface ens33 inet6 auto
@@ -49,6 +55,7 @@ Vérifier le nom de vos interfaces réseau :
         dns-nameservers 8.8.8.8 1.1.1.1
 
     # Interface bridge externe (ens36) — sans IP, gérée par OpenStack
+    # Vérifier le nom exact avec : ip a
     allow-hotplug ens36
     iface ens36 inet manual
         up ip link set dev $IFACE up
@@ -67,8 +74,7 @@ Vérifier :
 
 ---
 
-
-### Étape 2 : Installation de sudo et configuration
+### Étape 2 : Installation de sudo et mises à jour
 
 Par défaut sur Debian, sudo n'est pas installé. En tant que root :
 
@@ -78,12 +84,11 @@ Ajouter votre utilisateur principal au groupe sudo (optionnel) :
 
     usermod -aG sudo <votre_utilisateur>
 
-Appliquer les mises à jour système :   
+Appliquer les mises à jour système :
 
-    sudo apt update && sudo apt upgrade -y
+    apt update && apt upgrade -y
 
 ---
-
 
 ### Étape 3 : Informations et vérification du système
 
@@ -99,10 +104,13 @@ Avant de continuer, vérifier les ressources disponibles :
 
 ### Étape 4 : Vérification et activation de KVM
 
-Installer l'outil de vérification :
+Installer les outils de vérification :
 
-    sudo apt install cpu-checker -y
-    sudo kvm-ok
+    apt install qemu-kvm -y
+    virt-host-validate
+
+> ✅ Résultat attendu : PASS sur les lignes QEMU et KVM.
+> ❌ Si FAIL sur KVM : la virtualisation n'est pas activée dans le BIOS.
 
 Vérifier si les modules sont déjà chargés :
 
@@ -110,12 +118,12 @@ Vérifier si les modules sont déjà chargés :
 
 #### Pour processeur Intel :
 
-    sudo modprobe kvm-intel
-    echo 'options kvm-intel nested=1' | sudo tee /etc/modprobe.d/kvm-intel.conf
+    modprobe kvm-intel
+    echo 'options kvm-intel nested=1' | tee /etc/modprobe.d/kvm-intel.conf
 
 Rendre le module permanent au démarrage :
 
-    echo 'kvm-intel' | sudo tee -a /etc/modules
+    echo 'kvm-intel' | tee -a /etc/modules
 
 Vérifier que la virtualisation imbriquée est active :
 
@@ -124,12 +132,12 @@ Vérifier que la virtualisation imbriquée est active :
 
 #### Pour processeur AMD :
 
-    sudo modprobe kvm-amd
-    echo 'options kvm-amd nested=1' | sudo tee /etc/modprobe.d/kvm-amd.conf
+    modprobe kvm-amd
+    echo 'options kvm-amd nested=1' | tee /etc/modprobe.d/kvm-amd.conf
 
 Rendre le module permanent au démarrage :
 
-    echo 'kvm-amd' | sudo tee -a /etc/modules
+    echo 'kvm-amd' | tee -a /etc/modules
 
 Vérifier que la virtualisation imbriquée est active :
 
@@ -142,24 +150,20 @@ Vérifier que la virtualisation imbriquée est active :
 
 DevStack doit être exécuté avec un utilisateur dédié (jamais en root) :
 
-    sudo useradd -s /bin/bash -d /opt/stack -m stack
-    echo "stack ALL=(ALL) NOPASSWD: ALL" | sudo tee /etc/sudoers.d/stack
-    sudo chmod 0440 /etc/sudoers.d/stack        # sécuriser le fichier sudoers
+    useradd -s /bin/bash -d /opt/stack -m stack
+    echo "stack ALL=(ALL) NOPASSWD: ALL" | tee /etc/sudoers.d/stack
+    chmod 0440 /etc/sudoers.d/stack
 
 Basculer vers l'utilisateur stack :
 
-    sudo su - stack
-    # ou
-    sudo -i -u stack
+    su - stack
 
 Vérifier :
 
     whoami        # doit afficher : stack
     sudo -l       # doit afficher les droits NOPASSWD
 
-
 ---
-
 
 
 
