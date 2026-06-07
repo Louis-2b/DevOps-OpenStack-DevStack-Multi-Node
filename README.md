@@ -228,46 +228,73 @@ Vérifier :
 ---
 
 
-## 4. SSH (A faire sur la machine contrôleur)
-###  Génération de la paire de clés SSH (Ed25519 recommandé pour la sécurité)
+## 3. Configuration SSH et installation de DevStack
 
-```bash
-ssh-keygen -t ed25519 -C "devstack" -f ~/.ssh/devstack
-```
+### Sur le CONTRÔLEUR — Génération de la paire de clés SSH
 
-### Copier la clé publique vers la machine compute
+Se connecter en tant que stack :
 
-```bash
-cat ~/.ssh/devstack.pub | ssh compute@192.168.1.41 "mkdir -p ~/.ssh && chmod 700 ~/.ssh && cat >> ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys"
+    su - stack
 
-# Tester la connexion
-ssh -i ~/.ssh/devstack compute@192.168.1.41
-```
+Générer la paire de clés (Ed25519 recommandé) :
 
-### Téléchargement de DevStack sur les 2 machines (1 contrôleur + 1 compute)
+    ssh-keygen -t ed25519 -C "devstack" -f ~/.ssh/devstack
 
-Avant de lancer DevStack, assure toi d'avoir :
-```bash
-sudo apt install -y git python3-pip lvm2 thin-provisioning-tools python3-venv libpq-dev python3-dev
-# ou :
-sudo apt install -y git python3-pip python3-dev python3-venv libffi-dev gcc libssl-dev bridge-utils
-```
+> Appuyer sur Entrée pour laisser la passphrase vide (plus pratique 
+> pour DevStack).
 
-```bash
-# Se connecter en tant que stack
-sudo su - stack
+Copier la clé publique vers le nœud compute :
 
-# Cloner DevStack
-git clone https://opendev.org/openstack/devstack
-cd devstack/tools
-sudo ./create-stack-user.sh
-cd ../..
-sudo mv devstack /opt/stack
-sudo chown -R stack.stack /opt/stack/devstack
+    ssh-copy-id -i ~/.ssh/devstack.pub stack@172.20.10.5
 
-# Vérifier la connectivité réseau
-ping -c 3 192.168.1.121  # Depuis compute vers contrôleur
-```
+Tester la connexion :
+
+    ssh -i ~/.ssh/devstack stack@172.20.10.5
+
+> ✅ Résultat attendu : connexion sans mot de passe.
+
+---
+
+### Sur les 2 machines — Installation des dépendances
+
+En tant que root :
+
+    apt install -y git python3-pip python3-dev python3-venv \
+        libffi-dev libssl-dev libpq-dev \
+        gcc bridge-utils lvm2 thin-provisioning-tools
+
+---
+
+### Sur les 2 machines — Clonage de DevStack
+
+Basculer vers l'utilisateur stack :
+
+    su - stack
+
+Cloner DevStack directement dans /opt/stack :
+
+    git clone https://opendev.org/openstack/devstack /opt/stack/devstack
+    cd /opt/stack/devstack
+
+Vérifier la version clonée :
+
+    git log --oneline -5
+
+---
+
+### Vérification de la connectivité entre les nœuds
+
+Depuis le contrôleur vers le compute :
+
+    ping -c 3 172.20.10.5
+
+Depuis le compute vers le contrôleur :
+
+    ping -c 3 172.20.10.3
+
+> ✅ Les deux doivent répondre avant de continuer.
+
+---
 
 
 # Étapes d’installation
