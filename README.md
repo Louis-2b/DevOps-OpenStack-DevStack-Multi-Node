@@ -46,10 +46,10 @@ Vérifier le nom de vos interfaces réseau :
 #### Après (IP statique) :
 
     # Interface de management (ens33)
-    # Contrôleur : 172.20.10.3 | Compute : 172.20.10.5
+    # Contrôleur : 172.20.10.5 | Compute : 172.20.10.6
     allow-hotplug ens33
     iface ens33 inet static
-        address 172.20.10.3        # ← adapter selon le nœud
+        address 172.20.10.5        # ← adapter selon le nœud
         netmask 255.255.255.240
         gateway 172.20.10.1
         dns-nameservers 8.8.8.8 1.1.1.1
