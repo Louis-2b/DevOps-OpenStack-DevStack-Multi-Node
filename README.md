@@ -26,17 +26,19 @@ Passer en root (sudo non installé par défaut sur Debian) :
 
     su -
 
-Vérifier le nom de vos interfaces réseau :
+Configuration DNS temporaire :
+
+    echo "nameserver 8.8.8.8" | tee /etc/resolv.conf
+    echo "nameserver 1.1.1.1" | tee -a /etc/resolv.conf
+    echo "nameserver 172.20.10.1" | tee -a /etc/resolv.conf
+    Vérifier le nom de vos interfaces réseau :
+
+Vérifier les interfaces réseau :
 
     ip a
 
 > ⚠️ Les noms d'interfaces peuvent varier (ens33, ens36, eth0...).
 > Adaptez les noms dans la configuration selon votre machine.
-
-
-    echo "nameserver 8.8.8.8" | sudo tee /etc/resolv.conf
-    echo "nameserver 1.1.1.1" | sudo tee -a /etc/resolv.conf
-    echo "nameserver 172.20.10.1" | sudo tee -a /etc/resolv.conf
     
 Éditer la configuration :
 
@@ -68,7 +70,7 @@ Vérifier le nom de vos interfaces réseau :
 
 Sauvegarder : Ctrl+O → Entrée → Ctrl+X
 
-Appliquer :
+Appliquer la configuration :
 
     systemctl restart networking
 
@@ -77,6 +79,7 @@ Vérifier :
     ip a
     ip route
 
+Rendre le DNS permanent :
 ---
 
 ### Étape 2 : Installation de sudo et mises à jour
