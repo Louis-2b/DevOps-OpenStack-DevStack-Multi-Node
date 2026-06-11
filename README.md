@@ -352,6 +352,18 @@ Contenu du fichier (remplacer `REMPLACER_PAR_CLE_GENEREE` par la clé copiée) :
     
     PUBLIC_NETWORK_GATEWAY=172.20.10.1
     DNS_SERVERS=8.8.8.8,1.1.1.1
+
+    # +++++++++++++++++++++++
+    # Désactivation des démos
+    # +++++++++++++++++++++++
+    # Désactiver le téléchargement de l'image cirros
+    DOWNLOAD_DEFAULT_IMAGES=False
+    
+    # Tenter de désactiver les utilisateurs/projets de test
+    KEYSTONE_CREATE_TEST_USERS=False
+    
+    # Ne pas lancer les exercices DevStack
+    SKIP_EXERCISES=boot_from_volume,bundle,client-args,client-env
     
     # +++++++++++++++++++++++++++
     # AUTHENTIFICATION & SECURITE
