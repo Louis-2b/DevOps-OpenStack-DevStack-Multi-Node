@@ -18,7 +18,7 @@ installer et déployer OpenStack via DevStack sur Debian 12 (Bookworm).
 ---
 
 ## 1. Préparation du système
-> À effectuer sur les 2 machines (contrôleur + compute)
+> ⚠️ À effectuer sur les 2 machines (contrôleur + compute)
 
 ### Étape 1 : Configuration réseau statique
 
@@ -33,6 +33,11 @@ Vérifier le nom de vos interfaces réseau :
 > ⚠️ Les noms d'interfaces peuvent varier (ens33, ens36, eth0...).
 > Adaptez les noms dans la configuration selon votre machine.
 
+
+    echo "nameserver 8.8.8.8" | sudo tee /etc/resolv.conf
+    echo "nameserver 1.1.1.1" | sudo tee -a /etc/resolv.conf
+    echo "nameserver 172.20.10.1" | sudo tee -a /etc/resolv.conf
+    
 Éditer la configuration :
 
     nano /etc/network/interfaces
@@ -52,7 +57,7 @@ Vérifier le nom de vos interfaces réseau :
         address 172.20.10.5        # ← adapter selon le nœud
         netmask 255.255.255.240
         gateway 172.20.10.1
-        dns-nameservers 8.8.8.8 1.1.1.1
+        dns-nameservers 8.8.8.8 1.1.1.1 172.20.10.1
 
     # Interface bridge externe (ens36) — sans IP, gérée par OpenStack
     # Vérifier le nom exact avec : ip a
@@ -315,9 +320,6 @@ Générer la clé KEK pour Barbican avant de créer le fichier :
 > ⚠️ Copier la clé générée — elle sera à coller dans le champ `kek` 
 > du fichier local.conf ci-dessous.
 
-Créer le fichier de configuration :
-
-    sudo nano /opt/stack/devstack/local.conf
 
 Contenu du fichier (remplacer `REMPLACER_PAR_CLE_GENEREE` par la clé copiée) :
 
@@ -527,6 +529,34 @@ Contenu du fichier (remplacer `REMPLACER_PAR_CLE_GENEREE` par la clé copiée) :
 Sauvegarder : Ctrl+O → Entrée → Ctrl+X
 
 ---
+
+
+su -
+    locale-gen fr_FR.UTF-8
+    update-locale LANG=fr_FR.UTF-8
+    echo "LC_ALL=fr_FR.UTF-8" >> /etc/environment
+    exit
+
+
+Rendre le fichier immuable pour qu'il ne puisse pas être modifié :
+    
+    sudo chattr +i /etc/resolv.conf
+    
+Vérifier :
+    
+    lsattr /etc/resolv.conf
+    # Résultat attendu : ----i-------------- /etc/resolv.conf
+    
+Si tu as besoin de le modifier plus tard :
+    
+    sudo chattr -i /etc/resolv.conf
+    
+Créer le fichier de configuration :
+
+    sudo nano /opt/stack/devstack/local.conf
+
+
+    sudo chown -R stack:stack /opt/stack/
 
 #### Étape 9 : Lancer l'installation du contrôleur
 
