@@ -115,7 +115,7 @@ Avant de continuer, vérifier les ressources disponibles :
 Installer les outils de vérification :
 
     sudo apt install qemu-kvm -y
-    sudo apt install libvirt-clients -y
+    sudo apt install libvirt-daemon-system -y
     sudo virt-host-validate
 
 > ✅ Résultat attendu : PASS sur les lignes QEMU et KVM.
