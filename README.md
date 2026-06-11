@@ -324,31 +324,30 @@ Contenu du fichier (remplacer `REMPLACER_PAR_CLE_GENEREE` par la clé copiée) :
     # ++++++++++++++++++++++++++++++++++++
     # ++++ Local controller · CONF(1) ++++
     # ++++++++++++++++++++++++++++++++++++
-
+    
     [[local|localrc]]
-
+    
     # ++++++++++++++++++++
     # CONFIGURATION RESEAU
     # ++++++++++++++++++++
     HOSTNAME=controller
     HOST_IP=172.20.10.5
     SERVICE_HOST=172.20.10.5
-
-    # Réseau interne des VMs
+    
     FIXED_RANGE=10.0.1.0/24
     FIXED_NETWORK_SIZE=256
-
-    # Floating IPs — plage dédiée hors IPs machines
-    # Contrôleur=.5 | Compute=.6 | Floating=.9 à .17
-    FLOATING_RANGE=172.20.10.9/28
-    Q_FLOATING_ALLOCATION_POOL=start=172.20.10.9,end=172.20.10.17
-
+    NETWORK_GATEWAY=10.0.1.1
+    
+    # Floating IPs — Contrôleur=.5 | Compute=.6 | Floating=.7 à .14
+    FLOATING_RANGE=172.20.10.0/28
+    Q_FLOATING_ALLOCATION_POOL=start=172.20.10.7,end=172.20.10.14
+    
     PUBLIC_INTERFACE=ens36
-    FLAT_INTERFACE=$PUBLIC_INTERFACE
-
+    FLAT_INTERFACE=ens36
+    
     PUBLIC_NETWORK_GATEWAY=172.20.10.1
     DNS_SERVERS=8.8.8.8,1.1.1.1
-
+    
     # +++++++++++++++++++++++++++
     # AUTHENTIFICATION & SECURITE
     # +++++++++++++++++++++++++++
@@ -356,18 +355,18 @@ Contenu du fichier (remplacer `REMPLACER_PAR_CLE_GENEREE` par la clé copiée) :
     DATABASE_PASSWORD=password
     RABBIT_PASSWORD=password
     SERVICE_PASSWORD=password
-
+    
     # +++++++++++++++++++
     # Keystone (Identity)
     # +++++++++++++++++++
     KEYSTONE_TOKEN_FORMAT=fernet
     KEYSTONE_CATALOG_BACKEND=sql
-
+    
     # +++++++++++++++++++++++++
     # CONFIGURATION MULTI-NOEUD
     # +++++++++++++++++++++++++
     MULTI_HOST=1
-
+    
     # +++++++++++++++++
     # LOGS & MONITORING
     # +++++++++++++++++
@@ -379,133 +378,88 @@ Contenu du fichier (remplacer `REMPLACER_PAR_CLE_GENEREE` par la clé copiée) :
     SYSLOG=False
     LOG_COLOR=True
     LOGDAYS=7
-
+    
     # ++++++++++++++++++++++++++
     # SERVICES CORE - CONTROLEUR
     # ++++++++++++++++++++++++++
     ENABLED_SERVICES=rabbit,mysql,key
-
+    
     # +++++++++++++++++++++++
     # HORIZON - INTERFACE WEB
     # +++++++++++++++++++++++
     ENABLED_SERVICES+=,horizon
-
+    
     # +++++++++++++++++++++++++++++++++++
     # GLANCE - IMAGE SERVICE
     # g-reg retiré (déprécié depuis Yoga)
     # +++++++++++++++++++++++++++++++++++
     ENABLED_SERVICES+=,g-api
-
+    
     # +++++++++++++++++++++++++++++++++++++++++++++
     # NOVA - COMPUTE SERVICE
     # n-cpu retiré du contrôleur (rôle du compute)
     # n-sproxy et n-cauth retirés (dépréciés Yoga+)
     # +++++++++++++++++++++++++++++++++++++++++++++
     ENABLED_SERVICES+=,n-api,n-crt,n-cond,n-sch,n-api-meta,n-novnc,placement-api,placement-client
-
-    # KVM si CPU hôte le supporte, sinon qemu
     LIBVIRT_TYPE=kvm
-
-    # +++++++
-    # NEUTRON
-    # +++++++
+    
+    # ++++++++++++++++
+    # NEUTRON - Réseau
+    # ++++++++++++++++
     enable_plugin neutron https://opendev.org/openstack/neutron
     ENABLED_SERVICES+=,neutron,q-svc,q-agt,q-dhcp,q-l3,q-meta
-
+    
     Q_AGENT=openvswitch
-    Q_ML2_PLUGIN_TENANT_NETWORK_TYPES=vxlan
+    Q_ML2_PLUGIN_TENANT_NETWORK_TYPES=vxlan,geneve
     Q_ML2_PLUGIN_MECHANISM_DRIVERS=openvswitch,l2population
-    Q_ML2_PLUGIN_TYPE_DRIVERS=flat,vlan,vxlan
+    Q_ML2_PLUGIN_TYPE_DRIVERS=flat,vlan,vxlan,geneve
     Q_ML2_PLUGIN_EXT_DRIVERS=port_security
     Q_ML2_PLUGIN_VNI_RANGES=1:1000
-
-    # +++++++++++++++++++++++++++++
-    # CINDER - BLOCK DEVICE SERVICE
-    # +++++++++++++++++++++++++++++
+    
+    # +++++++++++++++++++++
+    # CINDER - Volumes bloc
+    # +++++++++++++++++++++
     ENABLED_SERVICES+=,cinder,c-api,c-vol,c-sch,c-bak
-
     CINDER_ENABLED_BACKENDS=lvm:cinder-volumes
     VOLUME_GROUP=cinder-volumes
     VOLUME_NAME_PREFIX=volume-
-
+    
     # ++++++++++++++++++++++
-    # SWIFT (Object Storage)
+    # SWIFT - Stockage objet
     # ++++++++++++++++++++++
     ENABLED_SERVICES+=,swift,s-proxy,s-object,s-container,s-account
     SWIFT_HASH=a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6
     SWIFT_REPLICAS=1
     SWIFT_DATA_DIR=$DEST/data/swift
-
+    
     # ++++++++++++++++++++
-    # HEAT (Orchestration)
+    # HEAT - Orchestration
     # ++++++++++++++++++++
     enable_plugin heat https://opendev.org/openstack/heat
     ENABLED_SERVICES+=,h-eng,h-api,h-api-cfn
-
-    # ++++++++++++++++++++++++
-    # OCTAVIA (Load Balancing)
-    # ++++++++++++++++++++++++
-    enable_plugin octavia https://opendev.org/openstack/octavia
-    enable_plugin octavia-dashboard https://opendev.org/openstack/octavia-dashboard.git
-    ENABLED_SERVICES+=,octavia,o-cw,o-hk,o-hm,o-api
-
-    OCTAVIA_AMP_IMAGE_NAME=amphora-image
-    OCTAVIA_AMP_FLAVOR_NAME=amphora-flavor
-    OCTAVIA_AMP_FLAVOR_RAM=1024
-    OCTAVIA_AMP_FLAVOR_VCPUS=1
-    OCTAVIA_AMP_FLAVOR_DISK=2
-    OCTAVIA_MANAGEMENT_NETWORK_NAME=lb-mgmt-net
-    OCTAVIA_MANAGEMENT_SUBNET_NAME=lb-mgmt-subnet
-    OCTAVIA_MANAGEMENT_SUBNET_CIDR=10.0.2.0/24
-
-    # +++++++++++++++++++++++++++++++++
-    # BARBICAN (Key Management Service)
-    # +++++++++++++++++++++++++++++++++
+    
+    # +++++++++++++++++++++++++++
+    # BARBICAN - Gestion des clés
+    # +++++++++++++++++++++++++++
     enable_plugin barbican https://opendev.org/openstack/barbican
-    ENABLED_SERVICES+=,barbican
-
-    # +++++++++++++++++++++++
-    # ZUN (Container Service)
-    # +++++++++++++++++++++++
-    enable_plugin devstack-plugin-container https://opendev.org/openstack/devstack-plugin-container
-    enable_plugin zun https://opendev.org/openstack/zun
-    enable_plugin zun-ui https://opendev.org/openstack/zun-ui
-    enable_plugin kuryr-libnetwork https://opendev.org/openstack/kuryr-libnetwork
-
-    ZUN_IMAGE_NAME=cirros
-    ZUN_IMAGE_LOCATION=http://download.cirros-cloud.net/0.6.2/cirros-0.6.2-x86_64-disk.img
-
-    KURYR_PROCESS_EXTERNAL_CONNECTIVITY=False
-    KURYR_CAPABILITY_SCOPE=global
-    KURYR_CONFIG_FOR_NETWORK_NAME=public
-    KURYR_USE_DNSMASQ=True
-
-    ENABLED_SERVICES+=,zun-api,zun-compute,zun-wj,zun-db,kuryr-libnetwork
-    ENABLE_CONTAINERD_CRI=False
-
-    # +++++++++++++++++++++++++++
-    # Manila (Shared Filesystems)
-    # +++++++++++++++++++++++++++
-    enable_plugin manila https://github.com/openstack/manila
-    enable_plugin manila-ui https://github.com/openstack/manila-ui
-    ENABLED_SERVICES+=,manila-api,manila-sch,manila-shr,manila-dat
-
+    ENABLED_SERVICES+=,barbican,barbican-api,barbican-worker,barbican-keystone-listener
+    
     # ++++++++++++++++++++++++++++
-    # Designate (DNS as a Service)
+    # DESIGNATE - DNS as a Service
     # ++++++++++++++++++++++++++++
     enable_plugin designate https://opendev.org/openstack/designate
     enable_plugin designate-dashboard https://opendev.org/openstack/designate-dashboard
     ENABLED_SERVICES+=,designate,designate-central,designate-api,designate-worker,designate-producer,designate-mdns
-
+    
     # +++++++++++++++++++
     # SERVICES DESACTIVES
     # +++++++++++++++++++
     disable_service tempest etcd3
-
+    
     # +++++++++++
     # POST-CONFIG
     # +++++++++++
-
+    
     [[post-config|$CINDER_CONF]]
     [cinder-volumes]
     image_volume_cache_enabled = True
@@ -518,65 +472,47 @@ Contenu du fichier (remplacer `REMPLACER_PAR_CLE_GENEREE` par la clé copiée) :
     volume_group = cinder-volumes
     volume_driver = cinder.volume.drivers.lvm.LVMVolumeDriver
     volume_backend_name = cinder-volumes
-
+    
     [DEFAULT]
     enabled_backends = cinder-volumes
     default_volume_type = cinder-volumes
     storage_availability_zone = nova
-
+    
     [[post-config|/etc/neutron/plugins/ml2/ml2_conf.ini]]
     [ml2]
-    type_drivers = flat,vlan,vxlan
-    tenant_network_types = vxlan
+    type_drivers = flat,vlan,vxlan,geneve
+    tenant_network_types = vxlan,geneve
     mechanism_drivers = openvswitch,l2population
     extension_drivers = port_security
-
+    
     [ml2_type_vxlan]
     vni_ranges = 1:1000
-
+    
     [ml2_type_flat]
     flat_networks = public
-
+    
     [ovs]
     bridge_mappings = public:br-ex
     local_ip = 172.20.10.5
-
+    
     [agent]
     tunnel_types = vxlan
     l2_population = True
-
-    [[post-config|$DESIGNATE_CONF]]
-    [service:api]
-    listen = 0.0.0.0:9001
-    api_base_uri = http://172.20.10.5:9001/
-    auth_strategy = keystone
-    enable_api_v2 = True
-    enable_api_admin = True
-
-    [DEFAULT]
-    debug = True
-
-    [service:worker]
-    enabled = True
-    notify = True
-
-    [service:mdns]
-    enabled = True
-
+    
     [[post-config|$BARBICAN_CONF]]
     [DEFAULT]
     debug = True
     host_href = http://172.20.10.5:9311
-
+    
     [secretstore]
     enabled_secretstore_plugins = store_crypto
-
+    
     [crypto]
     enabled_crypto_plugins = simple_crypto
-
+    
     [simple_crypto_plugin]
-    kek = REMPLACER_PAR_CLE_GENEREE
-
+    kek = ZUkIteiiW5kT57Gh2zUlw88TzKkGkm-GnBK32V1o66g=
+    
     [keystone_authtoken]
     auth_uri = http://172.20.10.5:5000
     auth_url = http://172.20.10.5:5000
@@ -586,64 +522,6 @@ Contenu du fichier (remplacer `REMPLACER_PAR_CLE_GENEREE` par la clé copiée) :
     user_domain_name = Default
     project_name = service
     username = barbican
-    password = password
-
-    [[post-config|$ZUN_CONF]]
-    [DEFAULT]
-    debug = True
-    transport_url = rabbit://stackrabbit:password@172.20.10.5:5672/
-
-    [api]
-    host_ip = 0.0.0.0
-    port = 9517
-
-    [database]
-    connection = mysql+pymysql://root:password@172.20.10.5/zun
-
-    [keystone_authtoken]
-    auth_uri = http://172.20.10.5:5000
-    auth_url = http://172.20.10.5:5000
-    memcached_servers = 172.20.10.5:11211
-    auth_type = password
-    project_domain_id = default
-    user_domain_id = default
-    project_name = service
-    username = zun
-    password = password
-
-    [glance]
-    api_servers = http://172.20.10.5:9292
-
-    [neutron]
-    auth_url = http://172.20.10.5:5000
-    auth_type = password
-    project_domain_name = Default
-    user_domain_name = Default
-    region_name = RegionOne
-    project_name = service
-    username = neutron
-    password = password
-
-    [placement]
-    auth_url = http://172.20.10.5:5000
-    auth_type = password
-    project_domain_name = Default
-    user_domain_name = Default
-    region_name = RegionOne
-    project_name = service
-    username = placement
-    password = password
-
-    [docker]
-    docker_remote_api_url = unix:///var/run/docker.sock
-
-    [kuryr]
-    auth_url = http://172.20.10.5:5000
-    auth_type = password
-    project_domain_name = Default
-    user_domain_name = Default
-    project_name = service
-    username = kuryr
     password = password
 
 Sauvegarder : Ctrl+O → Entrée → Ctrl+X
