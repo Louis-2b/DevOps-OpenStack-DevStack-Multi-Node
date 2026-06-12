@@ -609,6 +609,8 @@ Sauvegarder : Ctrl+O → Entrée → Ctrl+X
 > - La connectivité réseau est OK (`ping -c 3 172.20.10.6, ping -c 3 github.com`)
 
     cd /opt/stack/devstack
+    chmod 755 /opt/stack
+    ls -ld /opt/stack
     ./stack.sh
 
 > ⏱️ Durée estimée : 30 à 60 minutes selon la connexion internet.
