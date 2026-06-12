@@ -41,7 +41,7 @@ Puis se déconnecter et reconnecter pour prendre en compte les modifications :
 
 Appliquer les mises à jour système :
 
-    sudo apt update && apt upgrade -y
+    sudo apt update && sudo apt upgrade -y
 
 ---    
     
