@@ -472,20 +472,6 @@ Contenu du fichier (remplacer `REMPLACER_PAR_CLE_GENEREE` par la clé copiée) :
     Q_ML2_PLUGIN_TYPE_DRIVERS=flat,vlan,vxlan,geneve
     Q_ML2_PLUGIN_EXT_DRIVERS=port_security
     Q_ML2_PLUGIN_VNI_RANGES=1:1000
-
-    # ++++++++++++++++++++++++++++++++++++
-    # OCTAVIA - Load Balancer as a Service
-    # ++++++++++++++++++++++++++++++++++++
-    enable_plugin octavia https://opendev.org/openstack/octavia
-    enable_plugin octavia-dashboard https://opendev.org/openstack/octavia-dashboard
-    ENABLED_SERVICES+=,octavia,o-api,o-cw,o-hm,o-hk,o-da
-
-    # Construction de l'image amphora (obligatoire pour le fonctionnement des LB)
-    # Hôte Debian 13 -> base Debian pour éviter une dépendance ubuntu-keyring
-    DISABLE_AMP_IMAGE_BUILD=False
-    OCTAVIA_AMP_BASE_OS=ubuntu
-    OCTAVIA_AMP_DISTRIBUTION_RELEASE_ID=jammy
-    OCTAVIA_AMP_IMAGE_SIZE=3
     
     # +++++++++++++++++++++
     # CINDER - Volumes bloc
