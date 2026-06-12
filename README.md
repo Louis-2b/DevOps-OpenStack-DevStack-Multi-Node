@@ -358,8 +358,11 @@ Contenu du fichier (remplacer `REMPLACER_PAR_CLE_GENEREE` par la clé copiée) :
     # +++++++++++++++++++++++
     # Désactiver le téléchargement de l'image cirros
     DOWNLOAD_DEFAULT_IMAGES=False
+
+    # Empêche tout téléchargement implicite d'image par défaut
+    IMAGE_URLS=""
     
-    # Tenter de désactiver les utilisateurs/projets de test
+    # Désactiver la création des utilisateurs/projets de test (demo, alt_demo)
     KEYSTONE_CREATE_TEST_USERS=False
     
     # Ne pas lancer les exercices DevStack
@@ -432,6 +435,21 @@ Contenu du fichier (remplacer `REMPLACER_PAR_CLE_GENEREE` par la clé copiée) :
     Q_ML2_PLUGIN_TYPE_DRIVERS=flat,vlan,vxlan,geneve
     Q_ML2_PLUGIN_EXT_DRIVERS=port_security
     Q_ML2_PLUGIN_VNI_RANGES=1:1000
+
+    # ++++++++++++++++++++++++++++++++++++
+    # OCTAVIA - Load Balancer as a Service
+    # ++++++++++++++++++++++++++++++++++++
+    enable_plugin octavia https://opendev.org/openstack/octavia
+    enable_plugin octavia-dashboard https://opendev.org/openstack/octavia-dashboard
+    ENABLED_SERVICES+=,octavia,o-api,o-cw,o-hm,o-hk,o-da
+
+    # Construction de l'image amphora (obligatoire pour le fonctionnement des LB)
+    # Hôte Debian 13 -> base Debian pour éviter une dépendance ubuntu-keyring
+    DISABLE_AMP_IMAGE_BUILD=False
+    OCTAVIA_AMP_BASE_OS=debian
+    OCTAVIA_AMP_DISTRIBUTION_RELEASE_ID=trixie
+    OCTAVIA_AMP_DISTRIBUTION_RELEASE_ID=focal
+    OCTAVIA_AMP_IMAGE_SIZE=3
     
     # +++++++++++++++++++++
     # CINDER - Volumes bloc
