@@ -624,6 +624,7 @@ Vérification post-installation du contrôleur :
 Supprimer les projets inutiles :
 
     openstack project delete demo
+    openstack project delete alt_demo
     openstack project delete project_a
     openstack project delete project_b
     openstack project delete swiftprojecttest1
