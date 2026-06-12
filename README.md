@@ -604,7 +604,14 @@ Sauvegarder : Ctrl+O → Entrée → Ctrl+X
 
 ---
 
-#### Étape 8 : Vérification post-installation du contrôleur
+
+#### Étape 8 : Interface web Horizon accessible sur :
+
+    http://172.20.10.5/dashboard
+    Utilisateur : admin
+    Mot de passe : password
+    
+Vérification post-installation du contrôleur :
 
     source /opt/stack/devstack/openrc admin admin
     openstack service list          # liste tous les services enregistrés
@@ -612,38 +619,19 @@ Sauvegarder : Ctrl+O → Entrée → Ctrl+X
     openstack network agent list    # vérifie Neutron
     openstack volume service list   # vérifie Cinder
 
-> ✅ Tous les services doivent apparaître en état `up` ou `enabled`.
+> ✅ Tous les services doivent apparaître en état `up` ou `enabled`.    
 
-Interface web Horizon accessible sur :
+Supprimer les projets inutiles :
 
-    http://172.20.10.3/dashboard
-    Utilisateur : admin
-    Mot de passe : password
-
-
-
-### Lancer l’installation
-
-```bash
-# Exécutez stack.sh et effectuez quelques vérifications de cohérence
-sudo su - stack
-cd /opt/stack/devstack
-./stack.sh
-
-# Ce script télécharge, configure et déploie les services OpenStack sur le nœud contrôleur. Cela peut prendre du temps (10-30 minutes selon la machine).
-```
-
-### Vérifier l’installation
-
-```bash
-# Une fois terminé, vérifiez que les services sont en cours d’exécution
-source openrc admin admin
-
-openstack service list
-openstack endpoint list
-
-# Accédez à l’interface Horizon via un navigateur : http://<HOST_IP>/dashboard.
-```
+    openstack project delete demo
+    openstack project delete project_a
+    openstack project delete project_b
+    openstack project delete swiftprojecttest1
+    openstack project delete swiftprojecttest2
+    openstack project delete swiftprojecttest4
+    openstack project delete invisible_to_admin
+    
+----
 
 
 ## 2. Configuration des nœuds compute
