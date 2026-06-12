@@ -362,7 +362,7 @@ Créer le fichier de configuration :
 
 
 Contenu du fichier (remplacer `REMPLACER_PAR_CLE_GENEREE` par la clé copiée) :
-> Le contenu du fichier se trouve dans 
+> ⚠️ Le contenu du fichier se trouve dans le dossier `Controller`
     
 
 Sauvegarder : Ctrl+O → Entrée → Ctrl+X
