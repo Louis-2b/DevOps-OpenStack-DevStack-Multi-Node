@@ -493,6 +493,7 @@ Contenu du fichier (remplacer `REMPLACER_PAR_CLE_GENEREE` par la clé copiée) :
     # HEAT - Orchestration
     # ++++++++++++++++++++
     enable_plugin heat https://opendev.org/openstack/heat
+    enable_plugin heat-dashboard https://opendev.org/openstack/heat-dashboard
     ENABLED_SERVICES+=,h-eng,h-api,h-api-cfn
     
     # +++++++++++++++++++++++++++
