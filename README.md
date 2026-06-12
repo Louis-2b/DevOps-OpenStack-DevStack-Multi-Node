@@ -483,9 +483,8 @@ Contenu du fichier (remplacer `REMPLACER_PAR_CLE_GENEREE` par la clé copiée) :
     # Construction de l'image amphora (obligatoire pour le fonctionnement des LB)
     # Hôte Debian 13 -> base Debian pour éviter une dépendance ubuntu-keyring
     DISABLE_AMP_IMAGE_BUILD=False
-    OCTAVIA_AMP_BASE_OS=debian
-    OCTAVIA_AMP_DISTRIBUTION_RELEASE_ID=trixie
-    OCTAVIA_AMP_DISTRIBUTION_RELEASE_ID=focal
+    OCTAVIA_AMP_BASE_OS=ubuntu
+    OCTAVIA_AMP_DISTRIBUTION_RELEASE_ID=jammy
     OCTAVIA_AMP_IMAGE_SIZE=3
     
     # +++++++++++++++++++++
