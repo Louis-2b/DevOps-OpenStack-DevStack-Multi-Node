@@ -349,6 +349,11 @@ Générer la clé KEK pour Barbican avant de créer le fichier :
 > du fichier local.conf ci-dessous.
 
 
+Créer le fichier de configuration :
+
+    nano /opt/stack/devstack/local.conf
+
+
 Contenu du fichier (remplacer `REMPLACER_PAR_CLE_GENEREE` par la clé copiée) :
 
     # ++++++++++++++++++++++++++++++++++++
