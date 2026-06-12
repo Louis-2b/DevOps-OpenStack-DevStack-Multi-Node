@@ -20,29 +20,40 @@ installer et déployer OpenStack via DevStack sur Debian 12 (Bookworm).
 ## 1. Préparation du système
 > ⚠️ À effectuer sur les 2 machines (contrôleur + compute)
 
-### Étape 1 : Configuration réseau statique
+
+### Étape 1 : Installation de sudo et mises à jour
 
 Passer en root (sudo non installé par défaut sur Debian) :
 
     su -
 
-Configuration DNS temporaire :
+Par défaut sur Debian, sudo n'est pas installé. En tant que root :
 
-    echo "nameserver 8.8.8.8" | tee /etc/resolv.conf
-    echo "nameserver 1.1.1.1" | tee -a /etc/resolv.conf
-    echo "nameserver 172.20.10.1" | tee -a /etc/resolv.conf
-    Vérifier le nom de vos interfaces réseau :
+    apt install sudo -y
 
-Vérifier les interfaces réseau :
+Ajouter votre utilisateur principal au groupe sudo :
 
-    ip a
+    usermod -aG sudo <votre_utilisateur>
+
+Puis se déconnecter et reconnecter pour prendre en compte les modifications :
+
+    Ctrl+D
+
+Appliquer les mises à jour système :
+
+    sudo apt update && apt upgrade -y
+
+---    
+    
+
+### Étape 2 : Configuration réseau statique
 
 > ⚠️ Les noms d'interfaces peuvent varier (ens33, ens36, eth0...).
 > Adaptez les noms dans la configuration selon votre machine.
     
 Éditer la configuration :
 
-    nano /etc/network/interfaces
+    sudo nano /etc/network/interfaces
 
 #### Avant (DHCP) :
 
@@ -72,31 +83,38 @@ Sauvegarder : Ctrl+O → Entrée → Ctrl+X
 
 Appliquer la configuration :
 
-    systemctl restart networking
+    sudo systemctl restart networking
 
 Vérifier :
 
     ip a
     ip route
 
-Rendre le DNS permanent :
+Configuration DNS :
+
+    echo "nameserver 8.8.8.8" | sudo tee /etc/resolv.conf
+    echo "nameserver 1.1.1.1" | sudo tee -a /etc/resolv.conf
+    echo "nameserver 172.20.10.1" | sudo tee -a /etc/resolv.conf
+
+Vérifier les changement :
+
+    cat /etc/resolv.conf
+
+Rendre le fichier immuable pour qu'il ne puisse pas être modifié :    
+
+    sudo chattr +i /etc/resolv.conf
+
+Vérifier :
+
+    lsattr /etc/resolv.conf
+    # Résultat attendu : ----i-------------- /etc/resolv.conf
+
+Si tu as besoin de le modifier plus tard :
+
+    sudo chattr -i /etc/resolv.conf
+
 ---
 
-### Étape 2 : Installation de sudo et mises à jour
-
-Par défaut sur Debian, sudo n'est pas installé. En tant que root :
-
-    apt install sudo -y
-
-Ajouter votre utilisateur principal au groupe sudo (optionnel) :
-
-    usermod -aG sudo <votre_utilisateur>
-
-Appliquer les mises à jour système :
-
-    sudo apt update && apt upgrade -y
-
----
 
 ### Étape 3 : Informations et vérification du système
 
@@ -171,6 +189,8 @@ Vérifier :
 
     whoami        # doit afficher : stack
     sudo -l       # doit afficher les droits NOPASSWD
+
+Puis exit pour vous déconnecter de l'utilisateur stack
 
 ---
 
@@ -268,6 +288,7 @@ Tester la connexion :
 
 ---
 
+
 #### Sur les 2 machines — Installation des dépendances
 
 En tant que root :
@@ -300,7 +321,11 @@ Depuis le compute vers le contrôleur :
 
     ping -c 3 172.20.10.5
 
-> ✅ Les deux doivent répondre avant de continuer.
+Depuis le compute vers le contrôleur :
+
+    ping -c 3 github.com
+
+> ✅ Les trois doivent répondre avant de continuer.
 
 ---
 
