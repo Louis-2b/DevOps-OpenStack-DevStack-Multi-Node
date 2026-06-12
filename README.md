@@ -606,7 +606,7 @@ Sauvegarder : Ctrl+O → Entrée → Ctrl+X
 > ⚠️ Vérifier avant de lancer :
 > - L'utilisateur courant est bien `stack` (`whoami`)
 > - Le VG Cinder est bien créé (`vgs`)
-> - La connectivité réseau est OK (`ping -c 3 172.20.10.6`)
+> - La connectivité réseau est OK (`ping -c 3 172.20.10.6, ping -c 3 github.com`)
 
     cd /opt/stack/devstack
     ./stack.sh
