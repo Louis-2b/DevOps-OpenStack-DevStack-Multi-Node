@@ -623,6 +623,8 @@ Vérification post-installation du contrôleur :
 
 Supprimer les projets inutiles :
 
+⚠️ Attention Ne touche PAS aux projets `service` et `admin` ils sont indispensables au fonctionnement d'OpenStack.
+
     openstack project delete demo
     openstack project delete alt_demo
     openstack project delete project_a
@@ -631,6 +633,10 @@ Supprimer les projets inutiles :
     openstack project delete swiftprojecttest2
     openstack project delete swiftprojecttest4
     openstack project delete invisible_to_admin
+
+ Supprimer les utilisateurs inutiles :
+
+ ⚠️ Attention Ne touche PAS aux utilisateurs `admin`, `glance`, `nova`, `neutron`, `cinder`, `swift`, `heat`, `designate`, `placement`, `barbican`. Sans eux, ton cloud ne fonctionnera plus.
     
 ----
 
