@@ -297,6 +297,13 @@ En tant que root :
         libffi-dev libssl-dev libpq-dev \
         gcc bridge-utils lvm2 thin-provisioning-tools
 
+
+    su -
+    locale-gen fr_FR.UTF-8
+    update-locale LANG=fr_FR.UTF-8
+    echo "LC_ALL=fr_FR.UTF-8" >> /etc/environment
+    exit   
+
 ---
 
 #### Sur les 2 machines — Clonage de DevStack
@@ -593,33 +600,6 @@ Sauvegarder : Ctrl+O → Entrée → Ctrl+X
 
 ---
 
-
-su -
-    locale-gen fr_FR.UTF-8
-    update-locale LANG=fr_FR.UTF-8
-    echo "LC_ALL=fr_FR.UTF-8" >> /etc/environment
-    exit
-
-
-Rendre le fichier immuable pour qu'il ne puisse pas être modifié :
-    
-    sudo chattr +i /etc/resolv.conf
-    
-Vérifier :
-    
-    lsattr /etc/resolv.conf
-    # Résultat attendu : ----i-------------- /etc/resolv.conf
-    
-Si tu as besoin de le modifier plus tard :
-    
-    sudo chattr -i /etc/resolv.conf
-    
-Créer le fichier de configuration :
-
-    sudo nano /opt/stack/devstack/local.conf
-
-
-    sudo chown -R stack:stack /opt/stack/
 
 #### Étape 9 : Lancer l'installation du contrôleur
 
