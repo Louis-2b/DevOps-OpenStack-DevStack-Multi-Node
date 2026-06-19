@@ -4,7 +4,7 @@
   <img src="Images/OpenStack_Logo.png" alt="OpenStack Logo" width="500"/>
 </p>
 
-> ⚠️ Debian 13 (Trixie) est encore en phase de test — préférer Debian 12 
+> Ce projet documente le processus complet de déploiement d'un environnement cloud OpenStack à haute disponibilité (HA) à l'aide de **Kolla-Ansible**. Le déploiement comprend :
 > pour un environnement stable.
 
 ## Prérequis généraux
