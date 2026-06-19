@@ -1,7 +1,7 @@
 # Déploiement OpenStack avec Kolla Ansible | Haute disponibilité
 
 <p align="center">
-  <img src="Images/OpenStack_Logo.png" alt="OpenStack Logo" width="500"/>
+  <img src="Images/Openstack_Logo.jpeg" alt="OpenStack Logo" width="500"/>
 </p>
 
 ---
