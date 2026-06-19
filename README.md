@@ -4,8 +4,14 @@
   <img src="Images/OpenStack_Logo.png" alt="OpenStack Logo" width="500"/>
 </p>
 
-> Ce projet documente le processus complet de déploiement d'un environnement cloud OpenStack à haute disponibilité (HA) à l'aide de **Kolla-Ansible**. Le déploiement comprend :
-> pour un environnement stable.
+> Ce projet documente le processus complet de déploiement d'un environnement **cloud OpenStack à haute disponibilité (HA)** à l'aide de **Kolla-Ansible**. Le déploiement comprend :
+> - Configuration multi-nœuds (controller, compute, storage et network)
+> - Conteneurisation complète avec Docker
+> - Cluster Galera , HAProxy et Keepalived pour la haute disponibilité
+> - Configuration centralisée via Ansible
+> - Machines virtuelles provisionnées avec KVM/QEMU
+>
+> Ce guide s'adresse aux ingénieurs DevOps, aux architectes cloud et aux administrateurs système avancés. Il détaille les procédures permettant de reproduire ce déploiement aussi bien en environnement de laboratoire qu'en production.
 
 ## Prérequis généraux
 
