@@ -1,6 +1,8 @@
-# Déploiement OpenStack avec DevStack
-Ce guide documente les étapes complètes pour préparer un serveur, 
-installer et déployer OpenStack via DevStack sur Debian 12 (Bookworm).
+# Déploiement OpenStack avec Kolla Ansible | Haute disponibilité
+
+<p align="center">
+  <img src="images/OpenStack_Logo.png" alt="OpenStack Logo" width="500"/>
+</p>
 
 > ⚠️ Debian 13 (Trixie) est encore en phase de test — préférer Debian 12 
 > pour un environnement stable.
