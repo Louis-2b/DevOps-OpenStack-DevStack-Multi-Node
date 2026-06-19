@@ -57,7 +57,6 @@ Les nœuds de contrôle sont le **"cerveau"** du cloud OpenStack.
 
 > ⚠️ **IMPORTANT** : En architecture HA, les contrôleurs doivent être en nombre impair (3, 5, etc.) pour le quorum MariaDB.
 
----
 ### Réseau (network01)
 Le nœud réseau gère toute la connectivité réseau des instances.
 
@@ -69,7 +68,6 @@ Le nœud réseau gère toute la connectivité réseau des instances.
 | `Neutron Metadata Agent` | Fournit des métadonnées aux instances |
 | `OVN` | Contrôleur SDN (optionnel selon configuration) |
 
----
 ### Calcul (compute01)
 Les nœuds de calcul exécutent les machines virtuelles.
 
@@ -81,7 +79,6 @@ Les nœuds de calcul exécutent les machines virtuelles.
 | `Ceilometer Compute` | Collecte de métriques au niveau du compute |
 | `Prometheus Node Exporter` | Monitoring des ressources du nœud |
 
----
 ### Stockage (storage01)
 Le nœud de stockage fournit du stockage persistant.
 
