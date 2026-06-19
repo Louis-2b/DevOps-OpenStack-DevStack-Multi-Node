@@ -28,7 +28,7 @@
 
 - Le déploiement a été réalisé dans un laboratoire virtualisé sous VMware Workstation. 
 - Une machine virtuelle de base a été créée, puis clonée pour produire des nœuds supplémentaires, chacun se voyant attribuer le rôle qui lui est dévolu.
-- Toutes les machines virtuelles fonctionnent sous **Rocky Linux 10.2** et partagent, à l'origine, les mêmes spécifications matérielles, lesquelles sont ensuite adaptées en fonction du rôle assigné à chaque nœud.
+- Toutes les machines virtuelles fonctionnent sous **Rocky Linux 10.2 (ISO minimal)** et partagent, à l'origine, les mêmes spécifications matérielles, lesquelles sont ensuite adaptées en fonction du rôle assigné à chaque nœud.
 
 > **Télécharger l'ISO de Rocky Linux 10.2 (ISO minimal)**:  
 > [https://rockylinux.org/download](https://rockylinux.org/download)
