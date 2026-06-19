@@ -126,18 +126,39 @@ Le nœud de stockage fournit du stockage persistant.
 
 ---
 
+## 🖥️ Deployment Architecture
 
-## Prérequis généraux
+Cette section décrit l'architecture du déploiement OpenStack HA, y compris les rôles attribués à chaque nœud, leurs spécifications matérielles et la manière dont ils sont organisés pour garantir l'évolutivité, la haute disponibilité et la séparation des préoccupations.
 
-### Ressources recommandées
 
-| Rôle           | RAM   | vCPU | Disque        |
-|----------------|-------|------|---------------|
-| Contrôleur     | 16 Go | 4    | 2x 100 Go SSD |
-| Compute        | 32 Go | 8    | 2x 500 Go SSD |
-| Stockage Ceph  | 8 Go  | 2    | 3x 1 To       |  
+| Nom d'hôte   | Rôle                 | IPv4            | vCPU | RAM (GB) | Storage (GB)  | Notes                       |
+|--------------|----------------------|-----------------|------|----------|---------------|-----------------------------|
+| controller01 | Nœud de control      | 172.20.10.2     | 2    | 8        | 40            | Utilisé pour déployer Kolla |
+| controller02 | Nœud de control      |172.20.10.3      | 2    | 8        | 40            |                             |
+| controller03 | Nœud de control      |172.20.10.5      | 2    | 8        | 40            |                             |
+| compute01    | Nœud de calcul       | 172.20.10.6     | 2    | 8        | 40            | La virtualisation activée   |
+| network01    | Nœud de réseau       | 172.20.10.7     | 2    | 8        | 40            |                             |
+| storage01    | Stockage (Cinder LVM)| 172.20.10.8     | 2    | 8        | 40 (+10 GB)   | Volume LVM pour Cinder      |
+
+> **Remarque :** chaque machine virtuelle a été clonée à partir de la VM de base **controller01**, puis personnalisée individuellement (nom d'hôte, adresse IP statique, configuration des cartes réseau, etc.).
+---
+
+## Réseau de machines virtuelles
+
+Chaque machine virtuelle comprend au moins deux interfaces réseau :
+
+- `ens160`: Réseau de gestion interne/OpenStack
+- `ens192`: Réseau externe pour les adresses IP flottantes et l'accès externe
+  
+Les noms des cartes réseau peuvent varier en fonction de la configuration de l'hyperviseur.
+
+> ⚠️ **Rappel :** Veuillez toujours vérifier les noms des cartes réseau `ip a` après la création de la machine virtuelle.
 
 ---
+
+
+
+
 
 ## 1. Préparation du système
 > ⚠️ À effectuer sur les 2 machines (contrôleur + compute)
