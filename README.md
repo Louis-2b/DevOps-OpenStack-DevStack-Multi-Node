@@ -4,6 +4,8 @@
   <img src="Images/OpenStack_Logo.png" alt="OpenStack Logo" width="500"/>
 </p>
 
+---
+## Présentation
 > Ce projet documente le processus complet de déploiement d'un environnement **cloud OpenStack à haute disponibilité (HA)** à l'aide de **Kolla-Ansible**. Le déploiement comprend :
 > - Configuration multi-nœuds (controller, compute, storage et network)
 > - Conteneurisation complète avec Docker
