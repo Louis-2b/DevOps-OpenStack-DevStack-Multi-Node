@@ -34,6 +34,101 @@
 > [https://rockylinux.org/download](https://rockylinux.org/download)
 
 ---
+## Rôles des nœuds
+
+Cette section décrit les responsabilités spécifiques et les services clés hébergés sur chaque type de nœud au sein du cluster HA OpenStack.
+
+
+### Contrôleurs (controller01, 02, 03)
+Les nœuds de contrôle sont le **"cerveau"** du cloud OpenStack.
+
+| Service | Description |
+|---------|-------------|
+| `Keystone` | Gestion des identités et authentification |
+| `Glance` | Catalogue d'images (stockage local sur /mnt/glance) |
+| `Nova API/Scheduler/Conductor` | Gestion des ressources de calcul |
+| `Neutron Server` | API réseau |
+| `Horizon` | Interface web Dashboard |
+| `MariaDB (Galera)` | Base de données en cluster HA |
+| `RabbitMQ` | File d'attente de messages (HA) |
+| `Memcached` | Cache de sessions |
+| `HAProxy + Keepalived` | Équilibrage de charge haute disponibilité |
+| `Prometheus + Grafana` | Monitoring et métriques |
+
+> ⚠️ **IMPORTANT** : En architecture HA, les contrôleurs doivent être en nombre impair (3, 5, etc.) pour le quorum MariaDB.
+
+---
+### Réseau (network01)
+Le nœud réseau gère toute la connectivité réseau des instances.
+
+| Service | Description |
+|---------|-------------|
+| `Neutron OpenvSwitch Agent` | Gestion des réseaux overlay (VXLAN/GRE) |
+| `Neutron L3 Agent` | Routage entre réseaux (NAT) |
+| `Neutron DHCP Agent` | Attribution d'adresses IP aux instances |
+| `Neutron Metadata Agent` | Fournit des métadonnées aux instances |
+| `OVN` | Contrôleur SDN (optionnel selon configuration) |
+
+---
+### Calcul (compute01)
+Les nœuds de calcul exécutent les machines virtuelles.
+
+| Service | Description |
+|---------|-------------|
+| `Nova Compute` | Gestion du cycle de vie des VMs |
+| `Libvirt/KVM` | Hyperviseur pour l'exécution des VMs |
+| `Neutron OpenvSwitch Agent` | Connectivité réseau pour les VMs |
+| `Ceilometer Compute` | Collecte de métriques au niveau du compute |
+| `Prometheus Node Exporter` | Monitoring des ressources du nœud |
+
+---
+### Stockage (storage01)
+Le nœud de stockage fournit du stockage persistant.
+
+| Service | Description |
+|---------|-------------|
+| `Cinder Volume` | Gestion des volumes (stockage bloc) |
+| `Cinder Backup` | Sauvegarde des volumes (optionnel) |
+| `LVM` | Gestion des volumes logiques pour Cinder |
+| `iscsid / tgtd` | Services iSCSI pour les volumes Cinder |
+| `Prometheus Node Exporter` | Monitoring des ressources du nœud |
+
+---
+
+## Services déployés
+
+### Services core
+| Service | Statut | Description |
+|---------|--------|-------------|
+| ✅ **Keystone** | Activé | Authentification et identité |
+| ✅ **Glance** | Activé | Catalogue d'images |
+| ✅ **Nova** | Activé | Service de calcul |
+| ✅ **Neutron** | Activé | Service réseau |
+| ✅ **Horizon** | Activé | Dashboard web |
+| ✅ **Heat** | Activé | Orchestration |
+| ✅ **Cinder** | Activé | Stockage bloc (LVM) |
+
+### Monitoring & Télémétrie
+| Service | Statut | Description |
+|---------|--------|-------------|
+| ✅ **Prometheus** | Activé | Collecte de métriques |
+| ✅ **Grafana** | Activé | Visualisation des métriques |
+| ✅ **Ceilometer** | Activé | Collecte des données de téléchargement |
+| ✅ **Aodh** | Activé | Alerte et alarmes |
+| ✅ **Gnocchi** | Activé | Stockage des métriques (backend file) |
+
+### Services avancés
+| Service | Statut | Description |
+|---------|--------|-------------|
+| ✅ **Zun** | Activé | Gestion des conteneurs |
+| ✅ **Kuryr** | Activé | Intégration réseau pour les conteneurs |
+| ✅ **Designate** | Activé | Service DNS (Domain Name System) |
+| ⏸️ **Barbican** | À activer | Gestion des secrets |
+| ⏸️ **Octavia** | Non activé | Équilibrage de charge |
+| ⏸️ **Magnum** | Non activé | Orchestration de conteneurs (Kubernetes) |
+
+---
+
 
 ## Prérequis généraux
 
