@@ -1,7 +1,7 @@
 # Déploiement OpenStack avec Kolla Ansible | Haute disponibilité
 
 <p align="center">
-  <img src="images/OpenStack_Logo.png" alt="OpenStack Logo" width="500"/>
+  <img src="Images/OpenStack_Logo.png" alt="OpenStack Logo" width="500"/>
 </p>
 
 > ⚠️ Debian 13 (Trixie) est encore en phase de test — préférer Debian 12 
