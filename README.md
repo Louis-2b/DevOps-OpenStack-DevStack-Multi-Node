@@ -176,21 +176,20 @@ Cette étape consiste à créer une **machine virtuelle de référence** (`contr
 
    ![Ajout carte réseau 1](Images/Pic-02.png)
    ![Ajout carte réseau 2](Images/Pic-03.png)
-   ![Configuration finale des NIC](Images/Pic-04.png)
 
 4. Vérifiez le résumé de la configuration avant de valider.
 
-   ![Résumé final](images/pic5.png)
+   ![Résumé final](Images/Pic-04.png)
 
 #### 2. Installation de Rocky Linux 9.4
 
 1. Démarrez la machine virtuelle et lancez l’installation de **Rocky Linux 9.4**.
 
-   ![Démarrage de l’installation](images/pic6.png)
+   ![Démarrage de l’installation](Images/Pic-05.png)
 
 2. Sélectionnez la langue d’installation (recommandé : **Français**).
 
-   ![Choix de la langue](images/pic7.png)
+   ![Choix de la langue](Images/Pic-06.png)
 
 3. Configurez les paramètres d’installation :
 
@@ -200,7 +199,7 @@ Cette étape consiste à créer une **machine virtuelle de référence** (`contr
    - **Utilisateur root** (mot de passe fort)
    - **Création d’un utilisateur standard**
 
-   ![Écran de configuration](images/pic8.png)
+   ![Écran de configuration](Images/Pic-07.png)
 
 #### 3. Configuration critique de l’utilisateur et du réseau
 
