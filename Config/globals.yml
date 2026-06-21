@@ -124,6 +124,13 @@ enable_cinder_backup: "no"
 # ++++++++++++++++++++++++++++++++++++++++
 enable_zun: "yes"
 enable_horizon_zun: "{{ enable_zun | bool }}"
+
+# ++++++++++++++++++++++++++++++
+# Gestion des secrets (Barbican)
+# ++++++++++++++++++++++++++++++
+enable_barbican: "yes"
+# Backend logiciel par défaut (pas de HSM) — suffisant ici, ne rien ajouter de plus :
+# barbican_crypto_plugin: "simple_crypto"
  
 # +++++++++++++++++++++++++
 # Service d'images (Glance)
