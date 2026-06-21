@@ -155,3 +155,90 @@ Les noms des cartes réseau peuvent varier en fonction de la configuration de l'
 > ⚠️ **Rappel :** Veuillez toujours vérifier les noms des cartes réseau `ip a` après la création de la machine virtuelle.
 
 ---
+### 🖥️ Création et Installation de la Machine Virtuelle Rocky Linux de Base
+
+Cette étape consiste à créer une **machine virtuelle de référence** (`controller01`) qui servira de base pour cloner tous les autres nœuds du cluster (contrôleurs, compute, network, storage, etc.).
+
+#### 1. Création de la machine virtuelle
+
+1. Créez une nouvelle machine virtuelle nommée **`controller01`**.
+2. Configurez les ressources matérielles suivantes (à adapter selon votre infrastructure) :
+   - **vCPU** : 2 (minimum) – 4 recommandés pour un contrôleur
+   - **Mémoire RAM** : 8 Go (minimum) – 16 Go recommandés
+   - **Disque dur** : 40 Go (minimum) – 60 Go+ recommandés en production
+   - **Type de disque** : Thin Provision (pour économiser l’espace)
+
+   ![Spécifications de la VM](images/pic1.png)
+
+3. **Ajoutez une deuxième carte réseau (NIC)** pour séparer les réseaux interne et externe :
+   - NIC 1 → Réseau de management / API (ens160)
+   - NIC 2 → Réseau externe / Provider networks (ens192)
+
+   ![Ajout carte réseau 1](images/pic2.png)
+   ![Ajout carte réseau 2](images/pic3.png)
+   ![Configuration finale des NIC](images/pic4.png)
+
+4. Vérifiez le résumé de la configuration avant de valider.
+
+   ![Résumé final](images/pic5.png)
+
+#### 2. Installation de Rocky Linux 9.4
+
+1. Démarrez la machine virtuelle et lancez l’installation de **Rocky Linux 9.4**.
+
+   ![Démarrage de l’installation](images/pic6.png)
+
+2. Sélectionnez la langue d’installation (recommandé : **Français**).
+
+   ![Choix de la langue](images/pic7.png)
+
+3. Configurez les paramètres d’installation :
+
+   - **Partitionnement** : Utilisez le partitionnement automatique ou manuel (LVM recommandé).
+   - **Réseau et nom d’hôte**
+   - **Fuseau horaire**
+   - **Utilisateur root** (mot de passe fort)
+   - **Création d’un utilisateur standard**
+
+   ![Écran de configuration](images/pic8.png)
+
+#### 3. Configuration critique de l’utilisateur et du réseau
+
+- **Utilisateur Kolla** :  
+  Créez un utilisateur nommé **`kolla`** avec des droits `sudo` (sans mot de passe recommandé pour l’automatisation).  
+  Cet utilisateur sera utilisé pour exécuter Kolla-Ansible.
+
+- **Configuration réseau** (très important) :
+  - **NIC 1 (ens160)** : Laissez **DHCP activé** (vous configurerez une IP statique plus tard via cloud-init ou NetworkManager).
+  - **NIC 2 (ens192)** :  
+    - Désactivez **IPv4** (cette interface sera utilisée plus tard pour les réseaux providers Neutron).
+    - Désactivez puis réactivez l’interface pour appliquer les changements.
+
+   ![Configuration réseau NIC 1](images/pic9.png)
+   ![Configuration réseau NIC 2](images/pic10.png)
+   ![Activation de la carte](images/pic11.png)
+
+4. Validez toutes les configurations et lancez l’installation.
+
+   ![Lancement de l’installation](images/pic12.png)
+
+---
+
+### ✅ Bonnes pratiques recommandées
+
+- **Nommez clairement vos VMs** : `controller01`, `controller02`, `compute01`, etc.
+- **Utilisez des snapshots** après l’installation propre de la VM de base.
+- **Désactivez SELinux en mode permissive** pendant la phase de test (vous pourrez le remettre en enforcing plus tard).
+- **Mettez à jour le système** immédiatement après la première connexion :
+  ```bash
+  sudo dnf update -y
+  sudo reboot
+  ```
+
+- **Configurez SSH sans mot de passe** entre les nœuds dès le début.
+
+---
+
+**Prêt à être intégré** dans votre README global.
+
+Souhaitez-vous que je continue avec la section suivante (ex. : Configuration post-installation du nœud `controller01`, configuration réseau statique, installation de Kolla-Ansible, etc.) ?
