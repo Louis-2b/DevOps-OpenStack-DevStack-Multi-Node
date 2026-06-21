@@ -217,7 +217,7 @@ Cette étape consiste à créer une **machine virtuelle de référence** (`contr
    ![Configuration réseau NIC 2](Images/Pic-11.png)
    ![Activation de la carte](Images/Pic-12.png)
 
-4. Validez toutes les configurations et lancez l’installation.
+4. Validez toutes les configurations et lancez l'installation du système d'exploitation.
 
    ![Lancement de l’installation](Images/Pic-14.png)
 
