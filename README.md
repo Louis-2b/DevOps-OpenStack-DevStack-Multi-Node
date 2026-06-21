@@ -225,16 +225,20 @@ Cette étape consiste à créer une **machine virtuelle de référence** (`contr
 
 ### ✅ Bonnes pratiques recommandées
 
-- **Nommez clairement vos VMs** : `controller01`, `controller02`, `compute01`, etc.
-- **Utilisez des snapshots** après l’installation propre de la VM de base.
-- **Désactivez SELinux en mode permissive** pendant la phase de test (vous pourrez le remettre en enforcing plus tard).
-- **Mettez à jour le système** immédiatement après la première connexion :
-  ```bash
-  sudo dnf update -y
-  sudo reboot
-  ```
+- **Mettez à jour le système** Après le redémarrage, connectez-vous `root` et mettez à jour le système :
+   sudo dnf update -y
 
-- **Configurez SSH sans mot de passe** entre les nœuds dès le début.
+- Ajouter l'utilisateur `kolla` au groupe `wheel`
+   usermod -aG wheel kolla
+   grep wheel /etc/group
+
+- Modifiez le fichier `sudoers` pour autoriser l’utilisation de `sudo` sans mot de passe pour le groupe `wheel` :
+   sudo visudo -c && \
+   sudo sed -i \
+   -e 's/^\s*%wheel\s*ALL=(ALL)\s*ALL\s*$/# &/' \
+   -e 's/^\s*#\s*%wheel\s*ALL=(ALL)\s*NOPASSWD:\s*ALL\s*$/%wheel ALL=(ALL) NOPASSWD: ALL/' \
+   /etc/sudoers && \
+   sudo visudo -c
 
 ---
 
