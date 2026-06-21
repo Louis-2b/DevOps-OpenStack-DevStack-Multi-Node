@@ -136,6 +136,19 @@ enable_barbican: "yes"
 # Clusters Kubernetes (Magnum)
 # ++++++++++++++++++++++++++++
 enable_magnum: "yes"
+
+# ++++++++++++++++++++++
+# Stockage objet (Swift)
+# ++++++++++++++++++++++
+enable_swift: "yes"
+
+# +++++++++++++++
+# DNS (Designate)
+# +++++++++++++++
+enable_designate: "yes"
+enable_designate_backend_bind9: "yes"
+designate_backend: "bind9"
+neutron_dns_domain: "tubie.ops."
  
 # +++++++++++++++++++++++++
 # Service d'images (Glance)
