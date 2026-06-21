@@ -120,9 +120,9 @@ Le nœud de stockage fournit du stockage persistant.
 | ✅ **Zun** | Activé | Gestion des conteneurs |
 | ✅ **Kuryr** | Activé | Intégration réseau pour les conteneurs |
 | ✅ **Designate** | Activé | Service DNS (Domain Name System) |
-| ⏸️ **Barbican** | À activer | Gestion des secrets |
-| ⏸️ **Octavia** | Non activé | Équilibrage de charge |
-| ⏸️ **Magnum** | Non activé | Orchestration de conteneurs (Kubernetes) |
+| ✅ **Barbican** | Activé | Gestion des secrets |
+| ✅ **Octavia** | Activé | Équilibrage de charge |
+| ✅ **Magnum** | Activé | Orchestration de conteneurs (Kubernetes) |
 
 ---
 
