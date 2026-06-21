@@ -243,9 +243,9 @@ Cette étape consiste à créer une **machine virtuelle de référence** (`contr
    ```bash
       sudo visudo -c && \
       sudo sed -i \
-      -e 's/^\s*%wheel\s*ALL=(ALL)\s*ALL\s*$/# &/' \
-      -e 's/^\s*#\s*%wheel\s*ALL=(ALL)\s*NOPASSWD:\s*ALL\s*$/%wheel ALL=(ALL) NOPASSWD: ALL/' \
-      /etc/sudoers && \
+         -e 's/^\s*%wheel\s*ALL=(ALL)\s*ALL\s*$/# &/' \
+         -e 's/^\s*#\s*%wheel\s*ALL=(ALL)\s*NOPASSWD:\s*ALL\s*$/%wheel ALL=(ALL) NOPASSWD: ALL/' \
+         /etc/sudoers && \
       sudo visudo -c
    ```   
 
