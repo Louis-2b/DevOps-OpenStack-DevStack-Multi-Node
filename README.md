@@ -226,7 +226,10 @@ Cette étape consiste à créer une **machine virtuelle de référence** (`contr
 ### ✅ Bonnes pratiques recommandées
 
 - **Mettez à jour le système** Après le redémarrage, connectez-vous `root` et mettez à jour le système :
-   sudo dnf update -y
+   
+   ```bash
+      sudo dnf update -y
+   ```
 
 - Ajouter l'utilisateur `kolla` au groupe `wheel`
       usermod -aG wheel kolla
