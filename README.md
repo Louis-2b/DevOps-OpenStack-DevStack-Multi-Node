@@ -168,15 +168,15 @@ Cette étape consiste à créer une **machine virtuelle de référence** (`contr
    - **Disque dur** : 40 Go (minimum) – 60 Go+ recommandés en production
    - **Type de disque** : Thin Provision (pour économiser l’espace)
 
-   ![Spécifications de la VM](images/pic1.png)
+   ![Spécifications de la VM](Images/Pic-01.png)
 
 3. **Ajoutez une deuxième carte réseau (NIC)** pour séparer les réseaux interne et externe :
    - NIC 1 → Réseau de management / API (ens160)
    - NIC 2 → Réseau externe / Provider networks (ens192)
 
-   ![Ajout carte réseau 1](images/pic2.png)
-   ![Ajout carte réseau 2](images/pic3.png)
-   ![Configuration finale des NIC](images/pic4.png)
+   ![Ajout carte réseau 1](Images/Pic-02.png)
+   ![Ajout carte réseau 2](Images/Pic-03.png)
+   ![Configuration finale des NIC](Images/Pic-04.png)
 
 4. Vérifiez le résumé de la configuration avant de valider.
 
