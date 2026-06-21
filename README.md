@@ -181,9 +181,9 @@ Cette étape consiste à créer une **machine virtuelle de référence** (`contr
 
    ![Résumé final](Images/Pic-04.png)
 
-#### 2. Installation de Rocky Linux 9.4
+#### 2. Installation de Rocky Linux 10.2
 
-1. Démarrez la machine virtuelle et lancez l’installation de **Rocky Linux 9.4**.
+1. Démarrez la machine virtuelle et lancez l’installation de **Rocky Linux 10.2**.
 
    ![Démarrage de l’installation](Images/Pic-05.png)
 
@@ -204,22 +204,22 @@ Cette étape consiste à créer une **machine virtuelle de référence** (`contr
 #### 3. Configuration critique de l’utilisateur et du réseau
 
 - **Utilisateur Kolla** :  
-  Créez un utilisateur nommé **`kolla`** avec des droits `sudo` (sans mot de passe recommandé pour l’automatisation).  
+  Créez un utilisateur nommé **`kolla`** avec des droits `sudo`.  
   Cet utilisateur sera utilisé pour exécuter Kolla-Ansible.
 
 - **Configuration réseau** (très important) :
-  - **NIC 1 (ens160)** : Laissez **DHCP activé** (vous configurerez une IP statique plus tard via cloud-init ou NetworkManager).
+  - **NIC 1 (ens160)** : Laissez **DHCP activé** (vous configurerez une IP statique plus tard).
   - **NIC 2 (ens192)** :  
     - Désactivez **IPv4** (cette interface sera utilisée plus tard pour les réseaux providers Neutron).
     - Désactivez puis réactivez l’interface pour appliquer les changements.
 
-   ![Configuration réseau NIC 1](images/pic9.png)
-   ![Configuration réseau NIC 2](images/pic10.png)
-   ![Activation de la carte](images/pic11.png)
+   ![Configuration réseau NIC 1](Images/Pic-10.png)
+   ![Configuration réseau NIC 2](Images/Pic-11.png)
+   ![Activation de la carte](Images/Pic-12.png)
 
 4. Validez toutes les configurations et lancez l’installation.
 
-   ![Lancement de l’installation](images/pic12.png)
+   ![Lancement de l’installation](Images/Pic-14.png)
 
 ---
 
