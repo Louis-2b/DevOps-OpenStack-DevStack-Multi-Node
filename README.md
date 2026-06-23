@@ -1,252 +1,371 @@
-# Déploiement OpenStack avec Kolla Ansible | Haute disponibilité
+# Déploiement OpenStack HA avec Kolla-Ansible
 
 <p align="center">
   <img src="Images/Openstack_Logo.jpeg" alt="OpenStack Logo" width="500"/>
 </p>
 
+<p align="center">
+  <img src="https://img.shields.io/badge/OpenStack-2024.2%20Dalmatian-red?style=for-the-badge&logo=openstack" alt="OpenStack"/>
+  <img src="https://img.shields.io/badge/Rocky%20Linux-10.2-green?style=for-the-badge&logo=rockylinux" alt="Rocky Linux"/>
+  <img src="https://img.shields.io/badge/Kolla--Ansible-Multinode-blue?style=for-the-badge&logo=ansible" alt="Kolla-Ansible"/>
+  <img src="https://img.shields.io/badge/Docker-Conteneurs-2496ED?style=for-the-badge&logo=docker" alt="Docker"/>
+</p>
+
 ---
+
+## Table des matières
+
+- [Présentation](#présentation)
+- [Environnement de test](#environnement-de-test)
+- [Architecture du déploiement](#architecture-du-déploiement)
+- [Rôles des nœuds](#rôles-des-nœuds)
+- [Réseau des machines virtuelles](#réseau-des-machines-virtuelles)
+- [Services déployés](#services-déployés)
+- [Étape 1 — Création de la VM de base](#étape-1--création-de-la-vm-de-base)
+- [Étape 2 — Installation de Rocky Linux 10.2](#étape-2--installation-de-rocky-linux-102)
+- [Étape 3 — Configuration post-installation](#étape-3--configuration-post-installation)
+- [Bonnes pratiques](#bonnes-pratiques)
+
+---
+
 ## Présentation
-> Ce projet documente le processus complet de déploiement d'un environnement **cloud OpenStack à haute disponibilité (HA)** à l'aide de **Kolla-Ansible**. Le déploiement comprend :
-> - Configuration multi-nœuds (controller, compute, storage et network)
-> - Conteneurisation complète avec Docker
-> - Cluster Galera , HAProxy et Keepalived pour la haute disponibilité
-> - Configuration centralisée via Ansible
-> - Machines virtuelles provisionnées avec KVM/QEMU
->
-> Ce guide s'adresse aux ingénieurs DevOps, aux architectes cloud et aux administrateurs système avancés. Il détaille les procédures permettant de reproduire ce déploiement aussi bien en environnement de laboratoire qu'en production.
+
+Ce projet documente le processus complet de déploiement d'un environnement **cloud OpenStack à haute disponibilité (HA)** à l'aide de **Kolla-Ansible**. Le déploiement comprend :
+
+- Architecture multi-nœuds (controller, compute, storage, network)
+- Conteneurisation complète avec **Docker**
+- Cluster **Galera** + **HAProxy** + **Keepalived** pour la haute disponibilité
+- Configuration centralisée via **Ansible**
+- Machines virtuelles provisionnées sous **VMware Workstation**
+
+> Ce guide s'adresse aux ingénieurs **DevOps**, aux architectes **cloud** et aux administrateurs système avancés. Il détaille les procédures permettant de reproduire ce déploiement aussi bien en environnement de laboratoire qu'en production.
+
+> **Prérequis :** Ce guide suppose une connaissance de base de **Linux**, **Réseaux** et **Ansible**.
 
 ---
-**Environnement de test:**  
-> - 🖥️ OS: Rocky Linux 10.2 (ISO minimal)
-> - ☁️ Plateforme cloud: OpenStack `2024.2`  
-> - ⚙️ Outils: Kolla-Ansible, Docker, Ansible
 
-> **Remarque :** Cette documentation suppose une connaissance de base de **Linux**, **Réseaux** et **Ansible**.
+## Environnement de test
 
----
-## Environment Overview
-
-- Le déploiement a été réalisé dans un laboratoire virtualisé sous VMware Workstation. 
-- Une machine virtuelle de base a été créée, puis clonée pour produire des nœuds supplémentaires, chacun se voyant attribuer le rôle qui lui est dévolu.
-- Toutes les machines virtuelles fonctionnent sous **Rocky Linux 10.2 (ISO minimal)** et partagent, à l'origine, les mêmes spécifications matérielles, lesquelles sont ensuite adaptées en fonction du rôle assigné à chaque nœud.
-
-> **Télécharger l'ISO de Rocky Linux 10.2 (ISO minimal)**:  
-> [https://rockylinux.org/download](https://rockylinux.org/download)
+| Composant | Version / Détail |
+|-----------|-----------------|
+| Système d'exploitation | Rocky Linux 10.2 (ISO minimal) |
+| Plateforme cloud | OpenStack 2024.2 (Dalmatian) |
+| Outil de déploiement | Kolla-Ansible |
+| Moteur de conteneurs | Docker |
+| Hyperviseur | VMware Workstation |
+| Orchestrateur | Ansible |
 
 ---
+
+## Architecture du déploiement
+
+Le déploiement a été réalisé dans un laboratoire virtualisé sous **VMware Workstation**. Une machine virtuelle de base (`controller01`) a été créée, puis clonée pour produire les nœuds supplémentaires — chacun se voyant attribuer le rôle qui lui est dévolu.
+
+Toutes les machines virtuelles fonctionnent sous **Rocky Linux 10.2 (ISO minimal)** et partagent, à l'origine, les mêmes spécifications matérielles, lesquelles sont ensuite adaptées en fonction du rôle assigné à chaque nœud.
+
+| Nom d'hôte | Rôle | IPv4 | vCPU | RAM (Go) | Stockage (Go) | Notes |
+|------------|------|------|------|----------|---------------|-------|
+| `controller01` | Nœud de contrôle | 172.20.10.2 | 8 | 24 | 150–200 | Nœud de déploiement Kolla |
+| `controller02` | Nœud de contrôle | 172.20.10.3 | 8 | 24 | 150–200 | |
+| `controller03` | Nœud de contrôle | 172.20.10.5 | 8 | 24 | 150–200 | |
+| `compute01` | Nœud de calcul | 172.20.10.6 | 4 | 16 | 100 | Virtualisation imbriquée activée |
+| `network01` | Nœud réseau | 172.20.10.7 | 4 | 16 | 80 | |
+| `storage01` | Nœud de stockage | 172.20.10.8 | 4 | 8 | 100 + 60 (Swift) | Volume LVM pour Cinder |
+
+> ⚠️ **Règle de quorum HA :** Les nœuds contrôleurs doivent toujours être en **nombre impair** (3, 5, 7…) pour que le cluster MariaDB Galera et Keepalived puissent élire un leader en cas de défaillance.
+
+---
+
 ## Rôles des nœuds
 
-Cette section décrit les responsabilités spécifiques et les services clés hébergés sur chaque type de nœud au sein du cluster HA OpenStack.
+### Contrôleurs — `controller01`, `controller02`, `controller03`
 
-
-### Contrôleurs (controller01, 02, 03)
-Les nœuds de contrôle sont le **"cerveau"** du cloud OpenStack.
+Les nœuds de contrôle constituent le **cerveau** du cloud OpenStack. Ils hébergent toutes les API, la base de données, la messagerie et l'équilibrage de charge.
 
 | Service | Description |
 |---------|-------------|
 | `Keystone` | Gestion des identités et authentification |
-| `Glance` | Catalogue d'images (stockage local sur /mnt/glance) |
-| `Nova API/Scheduler/Conductor` | Gestion des ressources de calcul |
+| `Glance` | Catalogue d'images (stockage local sur `/mnt/glance`) |
+| `Nova API / Scheduler / Conductor` | Gestion des ressources de calcul |
 | `Neutron Server` | API réseau |
-| `Horizon` | Interface web Dashboard |
+| `Horizon` | Interface web (Dashboard) |
 | `MariaDB (Galera)` | Base de données en cluster HA |
 | `RabbitMQ` | File d'attente de messages (HA) |
 | `Memcached` | Cache de sessions |
-| `HAProxy + Keepalived` | Équilibrage de charge haute disponibilité |
+| `HAProxy + Keepalived` | Équilibrage de charge et VIP haute disponibilité |
 | `Prometheus + Grafana` | Monitoring et métriques |
 
-> ⚠️ **IMPORTANT** : En architecture HA, les contrôleurs doivent être en nombre impair (3, 5, etc.) pour le quorum MariaDB.
+---
 
-### Réseau (network01)
+### Réseau — `network01`
+
 Le nœud réseau gère toute la connectivité réseau des instances.
 
 | Service | Description |
 |---------|-------------|
-| `Neutron OpenvSwitch Agent` | Gestion des réseaux overlay (VXLAN/GRE) |
-| `Neutron L3 Agent` | Routage entre réseaux (NAT) |
+| `Neutron OVS Agent` | Gestion des réseaux overlay (VXLAN / GRE) |
+| `Neutron L3 Agent` | Routage inter-réseaux et NAT |
 | `Neutron DHCP Agent` | Attribution d'adresses IP aux instances |
 | `Neutron Metadata Agent` | Fournit des métadonnées aux instances |
-| `OVN` | Contrôleur SDN (optionnel selon configuration) |
 
-### Calcul (compute01)
-Les nœuds de calcul exécutent les machines virtuelles.
+---
+
+### Calcul — `compute01`
+
+Le nœud de calcul exécute les machines virtuelles des locataires (tenants).
 
 | Service | Description |
 |---------|-------------|
-| `Nova Compute` | Gestion du cycle de vie des VMs |
-| `Libvirt/KVM` | Hyperviseur pour l'exécution des VMs |
-| `Neutron OpenvSwitch Agent` | Connectivité réseau pour les VMs |
-| `Ceilometer Compute` | Collecte de métriques au niveau du compute |
+| `Nova Compute` | Cycle de vie des VMs |
+| `Libvirt / KVM` | Hyperviseur pour l'exécution des VMs |
+| `Neutron OVS Agent` | Connectivité réseau des VMs |
+| `Ceilometer Compute` | Collecte de métriques au niveau compute |
 | `Prometheus Node Exporter` | Monitoring des ressources du nœud |
 
-### Stockage (storage01)
-Le nœud de stockage fournit du stockage persistant.
+---
+
+### Stockage — `storage01`
+
+Le nœud de stockage fournit du stockage persistant (volumes bloc et objets).
 
 | Service | Description |
 |---------|-------------|
-| `Cinder Volume` | Gestion des volumes (stockage bloc) |
-| `Cinder Backup` | Sauvegarde des volumes (optionnel) |
-| `LVM` | Gestion des volumes logiques pour Cinder |
+| `Cinder Volume` | Gestion des volumes (stockage bloc LVM) |
+| `Cinder Backup` | Sauvegarde des volumes vers Swift |
+| `LVM` | Gestion des volumes logiques (`cinder-volumes`) |
 | `iscsid / tgtd` | Services iSCSI pour les volumes Cinder |
+| `Swift (account / container / object)` | Stockage objet distribué |
 | `Prometheus Node Exporter` | Monitoring des ressources du nœud |
+
+---
+
+## Réseau des machines virtuelles
+
+Chaque machine virtuelle dispose d'**au moins deux interfaces réseau** :
+
+| Interface | Rôle | Configuration |
+|-----------|------|---------------|
+| `ens160` | Réseau de gestion OpenStack (API, réplication, stockage) | IP statique configurée |
+| `ens192` | Réseau externe — IP flottantes et accès provider | Pas d'IP (bridge Neutron) |
+
+> ⚠️ Les noms d'interfaces (`ens160`, `ens192`) peuvent varier selon la configuration de l'hyperviseur. Vérifiez toujours avec `ip a` après la création ou le clonage d'une VM.
 
 ---
 
 ## Services déployés
 
-### Services core
+### Services cœur
+
 | Service | Statut | Description |
 |---------|--------|-------------|
-| ✅ **Keystone** | Activé | Authentification et identité |
-| ✅ **Glance** | Activé | Catalogue d'images |
-| ✅ **Nova** | Activé | Service de calcul |
-| ✅ **Neutron** | Activé | Service réseau |
-| ✅ **Horizon** | Activé | Dashboard web |
-| ✅ **Heat** | Activé | Orchestration |
-| ✅ **Cinder** | Activé | Stockage bloc (LVM) |
+| **Keystone** | ✅ Activé | Authentification et identité |
+| **Glance** | ✅ Activé | Catalogue d'images |
+| **Nova** | ✅ Activé | Service de calcul |
+| **Neutron** | ✅ Activé | Service réseau (OVS) |
+| **Horizon** | ✅ Activé | Dashboard web |
+| **Heat** | ✅ Activé | Orchestration (stacks) |
+| **Cinder** | ✅ Activé | Stockage bloc (LVM) |
 
 ### Monitoring & Télémétrie
+
 | Service | Statut | Description |
 |---------|--------|-------------|
-| ✅ **Prometheus** | Activé | Collecte de métriques |
-| ✅ **Grafana** | Activé | Visualisation des métriques |
-| ✅ **Ceilometer** | Activé | Collecte des données de téléchargement |
-| ✅ **Aodh** | Activé | Alerte et alarmes |
-| ✅ **Gnocchi** | Activé | Stockage des métriques (backend file) |
+| **Prometheus** | ✅ Activé | Collecte de métriques |
+| **Grafana** | ✅ Activé | Visualisation des métriques |
+| **Ceilometer** | ✅ Activé | Collecte des données de consommation |
+| **Aodh** | ✅ Activé | Alertes et alarmes |
+| **Gnocchi** | ✅ Activé | Stockage des métriques (backend `file`) |
 
 ### Services avancés
+
 | Service | Statut | Description |
 |---------|--------|-------------|
-| ✅ **Zun** | Activé | Gestion des conteneurs |
-| ✅ **Kuryr** | Activé | Intégration réseau pour les conteneurs |
-| ✅ **Designate** | Activé | Service DNS (Domain Name System) |
-| ✅ **Barbican** | Activé | Gestion des secrets |
-| ✅ **Octavia** | Activé | Équilibrage de charge |
-| ✅ **Magnum** | Activé | Orchestration de conteneurs (Kubernetes) |
+| **Zun** | ✅ Activé | Gestion des conteneurs applicatifs |
+| **Kuryr** | ✅ Activé | Intégration réseau pour les conteneurs |
+| **Swift** | ✅ Activé | Stockage objet distribué |
+| **Barbican** | ✅ Activé | Gestion des secrets et chiffrement |
+| **Magnum** | ✅ Activé | Orchestration Kubernetes (clusters K8s) |
+| **Designate** | ✅ Activé | Service DNS as a Service |
+| **Octavia** | ✅ Activé | Load Balancer as a Service |
 
 ---
 
-## Deployment Architecture
+## Étape 1 — Création de la VM de base
 
-Cette section décrit l'architecture du déploiement OpenStack HA, y compris les rôles attribués à chaque nœud, leurs spécifications matérielles et la manière dont ils sont organisés pour garantir l'évolutivité, la haute disponibilité et la séparation des préoccupations.
+Cette étape consiste à créer une **machine virtuelle de référence** (`controller01`) qui servira de base pour cloner tous les autres nœuds du cluster.
 
+### 1.1 Paramètres matériels recommandés
 
-| Nom d'hôte   | Rôle                 | IPv4            | vCPU | RAM (GB) | Storage (GB)  | Notes                       |
-|--------------|----------------------|-----------------|------|----------|---------------|-----------------------------|
-| controller01 | Nœud de control      | 172.20.10.2     | 8    | 24       | 150-200       | Utilisé pour déployer Kolla |
-| controller02 | Nœud de control      | 172.20.10.3     | 8    | 24       | 150-200       |                             |
-| controller03 | Nœud de control      | 172.20.10.5     | 8    | 24       | 150-200       |                             |
-| compute01    | Nœud de calcul       | 172.20.10.6     | 4    | 16       | 100           | La virtualisation activée   |
-| network01    | Nœud de réseau       | 172.20.10.7     | 4    | 16       | 80            |                             |
-| storage01    | Stockage (Cinder LVM)| 172.20.10.8     | 4    | 8        | 100 (+100 GB) | Volume LVM pour Cinder      |
+Créez une nouvelle VM avec les ressources suivantes (minimum pour le nœud de base, à adapter par la suite selon le rôle) :
 
-> **Remarque :** chaque machine virtuelle a été clonée à partir de la VM de base **controller01**, puis personnalisée individuellement (nom d'hôte, adresse IP statique, configuration des cartes réseau, etc.).
----
+| Paramètre | Valeur recommandée |
+|-----------|-------------------|
+| vCPU | 4 (minimum 2) |
+| RAM | 16 Go (minimum 8 Go) |
+| Disque | 60 Go+ (Thin Provision) |
+| Type de disque | Thin Provision (économise l'espace sur le datastore) |
 
-## Réseau de machines virtuelles
+![Spécifications de la VM](Images/Pic-01.png)
 
-Chaque machine virtuelle comprend au moins deux interfaces réseau :
+### 1.2 Configuration réseau de la VM
 
-- `ens160`: Réseau de gestion interne/OpenStack
-- `ens192`: Réseau externe pour les adresses IP flottantes et l'accès externe
-  
-Les noms des cartes réseau peuvent varier en fonction de la configuration de l'hyperviseur.
+Ajoutez **deux cartes réseau (NIC)** à la machine virtuelle :
 
-> ⚠️ **Rappel :** Veuillez toujours vérifier les noms des cartes réseau `ip a` après la création de la machine virtuelle.
+| NIC | Réseau VMware | Rôle OpenStack |
+|-----|---------------|----------------|
+| NIC 1 (`ens160`) | Host-Only ou réseau de gestion | API, réplication, stockage |
+| NIC 2 (`ens192`) | Réseau externe (bridgé ou dédié) | Provider networks, IPs flottantes |
 
----
-### 🖥️ Création et Installation de la Machine Virtuelle Rocky Linux de Base
+![Ajout carte réseau 1](Images/Pic-02.png)
+![Ajout carte réseau 2](Images/Pic-03.png)
 
-Cette étape consiste à créer une **machine virtuelle de référence** (`controller01`) qui servira de base pour cloner tous les autres nœuds du cluster (contrôleurs, compute, network, storage, etc.).
+Vérifiez le résumé de configuration avant de valider.
 
-#### 1. Création de la machine virtuelle
-
-1. Créez une nouvelle machine virtuelle nommée **`controller01`**.
-2. Configurez les ressources matérielles suivantes (à adapter selon votre infrastructure) :
-   - **vCPU** : 2 (minimum) – 4 recommandés pour un contrôleur
-   - **Mémoire RAM** : 8 Go (minimum) – 16 Go recommandés
-   - **Disque dur** : 40 Go (minimum) – 60 Go+ recommandés en production
-   - **Type de disque** : Thin Provision (pour économiser l’espace)
-
-   ![Spécifications de la VM](Images/Pic-01.png)
-
-3. **Ajoutez une deuxième carte réseau (NIC)** pour séparer les réseaux interne et externe :
-   - NIC 1 → Réseau de management / API (ens160)
-   - NIC 2 → Réseau externe / Provider networks (ens192)
-
-   ![Ajout carte réseau 1](Images/Pic-02.png)
-   ![Ajout carte réseau 2](Images/Pic-03.png)
-
-4. Vérifiez le résumé de la configuration avant de valider.
-
-   ![Résumé final](Images/Pic-04.png)
-
-#### 2. Installation de Rocky Linux 10.2
-
-1. Démarrez la machine virtuelle et lancez l’installation de **Rocky Linux 10.2**.
-
-   ![Démarrage de l’installation](Images/Pic-05.png)
-
-2. Sélectionnez la langue d’installation (recommandé : **Français**).
-
-   ![Choix de la langue](Images/Pic-06.png)
-
-3. Configurez les paramètres d’installation :
-
-   - **Partitionnement** : Utilisez le partitionnement automatique ou manuel (LVM recommandé).
-   - **Réseau et nom d’hôte**
-   - **Fuseau horaire**
-   - **Utilisateur root** (mot de passe fort)
-   - **Création d’un utilisateur standard**
-
-   ![Écran de configuration](Images/Pic-07.png)
-
-#### 3. Configuration critique de l’utilisateur et du réseau
-
-- **Utilisateur Kolla** :  
-  Créez un utilisateur nommé **`kolla`** avec des droits `sudo`.  
-  Cet utilisateur sera utilisé pour exécuter Kolla-Ansible.
-
-- **Configuration réseau** (très important) :
-  - **NIC 1 (ens160)** : Laissez **DHCP activé** (vous configurerez une IP statique plus tard).
-  - **NIC 2 (ens192)** :  
-    - Désactivez **IPv4** (cette interface sera utilisée plus tard pour les réseaux providers Neutron).
-    - Désactivez puis réactivez l’interface pour appliquer les changements.
-
-   ![Configuration réseau NIC 1](Images/Pic-10.png)
-   ![Configuration réseau NIC 2](Images/Pic-11.png)
-   ![Activation de la carte](Images/Pic-12.png)
-
-4. Validez toutes les configurations et lancez l'installation du système d'exploitation.
-
-   ![Lancement de l’installation](Images/Pic-14.png)
+![Résumé final](Images/Pic-04.png)
 
 ---
 
-### ✅ Bonnes pratiques recommandées
+## Étape 2 — Installation de Rocky Linux 10.2
 
-- **Mettez à jour le système** Après le redémarrage, connectez-vous `root` et mettez à jour le système :
-   
-   ```bash
-      sudo dnf update -y
-   ```
+> **Télécharger l'ISO Rocky Linux 10.2 (minimal) :**
+> [https://rockylinux.org/download](https://rockylinux.org/download)
 
-- Ajoutez l'utilisateur `kolla` au groupe `wheel` :
+Démarrez la VM et lancez l'installation de Rocky Linux.
 
-   ```bash
-      usermod -aG wheel kolla
-      grep wheel /etc/group
-   ```
+![Démarrage de l'installation](Images/Pic-05.png)
 
-- Modifiez le fichier `sudoers` pour autoriser l’utilisation de `sudo` sans mot de passe pour le groupe `wheel` :
+### 2.1 Langue d'installation
 
-   ```bash
-      sudo visudo -c && \
-      sudo sed -i \
-         -e 's/^\s*%wheel\s*ALL=(ALL)\s*ALL\s*$/# &/' \
-         -e 's/^\s*#\s*%wheel\s*ALL=(ALL)\s*NOPASSWD:\s*ALL\s*$/%wheel ALL=(ALL) NOPASSWD: ALL/' \
-         /etc/sudoers && \
-      sudo visudo -c
-   ```   
+Sélectionnez la langue d'installation souhaitée (le Français est supporté).
+
+![Choix de la langue](Images/Pic-06.png)
+
+### 2.2 Paramètres à configurer
+
+Sur l'écran de sommaire d'installation, configurez les éléments suivants :
+
+| Paramètre | Recommandation |
+|-----------|----------------|
+| Partitionnement | Automatique ou manuel (LVM recommandé) |
+| Réseau et nom d'hôte | Configurer `ens160` et `ens192` |
+| Fuseau horaire | Votre région |
+| Mot de passe root | Fort, noté en lieu sûr |
+| Utilisateur standard | `kolla` (voir section suivante) |
+
+![Écran de configuration](Images/Pic-07.png)
+
+### 2.3 Configuration réseau lors de l'installation
+
+- **NIC 1 (`ens160`)** : Activez le DHCP pour l'instant — l'IP statique sera configurée après.
+- **NIC 2 (`ens192`)** : Désactivez IPv4 entièrement. Cette interface sera gérée exclusivement par Neutron (OVS bridge) et **ne doit pas avoir d'adresse IP système**.
+
+![Configuration réseau NIC 1](Images/Pic-10.png)
+![Configuration réseau NIC 2](Images/Pic-11.png)
+![Activation de la carte](Images/Pic-12.png)
+
+Validez toutes les configurations et lancez l'installation.
+
+![Lancement de l'installation](Images/Pic-14.png)
+
+---
+
+## Étape 3 — Configuration post-installation
+
+Une fois Rocky Linux installé et la VM redémarrée, effectuez les opérations suivantes **en tant que `root`** sur `controller01` avant tout clonage.
+
+---
+
+### 3.1 Mise à jour du système
+
+Mettez à jour tous les paquets installés pour partir d'un système propre et à jour.
+
+```bash
+# Mise à jour complète du système (noyau, bibliothèques, outils)
+sudo dnf update -y
+```
+
+---
+
+### 3.2 Création et configuration de l'utilisateur `kolla`
+
+L'utilisateur `kolla` est l'utilisateur dédié à l'exécution de Kolla-Ansible sur tous les nœuds.
+Il doit disposer des droits `sudo` sans mot de passe (requis par Ansible pour les tâches d'élévation de privilèges).
+
+#### Ajout au groupe `wheel` (sudo)
+
+```bash
+# Ajout de l'utilisateur kolla au groupe wheel (administrateurs système)
+usermod -aG wheel kolla
+
+# Vérification — kolla doit apparaître dans la ligne wheel
+grep wheel /etc/group
+```
+
+#### Autorisation sudo sans mot de passe pour le groupe wheel
+
+Kolla-Ansible exécute de nombreuses tâches nécessitant `sudo` de manière automatisée.
+Sans cette configuration, les playbooks Ansible s'arrêteront en demandant un mot de passe.
+
+```bash
+# Vérification syntaxique du fichier sudoers avant modification (sécurité)
+sudo visudo -c
+
+# Modification de sudoers :
+#   - Commente la ligne "%wheel ALL=(ALL) ALL" (sudo avec mot de passe)
+#   - Décommente la ligne "%wheel ALL=(ALL) NOPASSWD: ALL" (sudo sans mot de passe)
+sudo sed -i \
+  -e 's/^\s*%wheel\s*ALL=(ALL)\s*ALL\s*$/# &/' \
+  -e 's/^\s*#\s*%wheel\s*ALL=(ALL)\s*NOPASSWD:\s*ALL\s*$/%wheel ALL=(ALL) NOPASSWD: ALL/' \
+  /etc/sudoers
+
+# Vérification syntaxique après modification — IMPORTANT, ne pas sauter cette étape
+sudo visudo -c
+```
+
+---
+
+### 3.3 Installation des paquets prérequis
+
+Ces paquets sont nécessaires pour Kolla-Ansible et les opérations de déploiement.
+
+```bash
+# Outils d'archivage — requis pour certains rôles Ansible
+sudo dnf install -y tar gzip unzip
+
+# OpenSSL — requis pour la génération des certificats TLS (kolla-ansible certificates)
+sudo dnf install -y openssl
+```
+
+---
+
+### 3.4 Vérification des interfaces réseau
+
+Après l'installation (et après chaque clonage), confirmez les noms d'interfaces réseau.
+Les noms peuvent différer selon la configuration VMware ou le profil matériel.
+
+```bash
+# Affiche toutes les interfaces réseau et leurs adresses IP
+ip a
+
+# Alternative — affichage compact (nom + état + adresse IPv4 uniquement)
+ip -br -4 addr show
+```
+
+> **Attendu :**
+> - `ens160` — UP, avec une adresse IP (DHCP pour l'instant, statique après)
+> - `ens192` — UP ou DOWN, **sans adresse IP** (sera gérée par Neutron)
+
+---
+
+## Bonnes pratiques
+
+| Recommandation | Pourquoi |
+|----------------|----------|
+| Toujours cloner depuis `controller01` une fois la configuration de base terminée | Garantit une base identique sur tous les nœuds |
+| Configurer une IP statique sur `ens160` avant de passer en production | Évite les changements d'IP au redémarrage |
+| Ne jamais assigner d'IP à `ens192` | Neutron prend le contrôle complet de cette interface via OVS |
+| Utiliser un nombre impair de contrôleurs (3, 5, 7) | Requis pour le quorum MariaDB Galera et Keepalived |
+| Conserver une sauvegarde de `/etc/kolla/passwords.yml` | Contient tous les secrets — perte = déploiement irrécupérable |
+| Valider la syntaxe YAML après chaque modification de `globals.yml` | `python3 -c "import yaml; yaml.safe_load(open('/etc/kolla/globals.yml'))"` |
 
 ---
