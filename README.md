@@ -454,3 +454,93 @@ Répétez l'opération pour chaque machine virtuelle ayant l'adresse IP et le no
 ![Screenshot 31](Images/Pic-22.png)
 
 3. Répétez si vous avez plusieurs **nœud de calcul (`compute01, compute02...`)**.
+
+---
+
+### Attacher des nouveaux disques aux machines virtuelles de stockage (pour Cinder LVM et Swift)
+
+1. Ajoutez un nouveau disque virtuel (20 Go ou plus) à chaque **nœud de stockage**.
+
+![Screenshot 32](Images/Pic-23.png)
+
+![Screenshot 33](Images/Pic-24.png)
+
+![Screenshot 34](Images/Pic-25.png)
+
+![Screenshot 35](Images/Pic-26.png)
+
+![Screenshot 36](Images/Pic-27.png)
+
+2. Vérifier:
+    ```bash
+    lsblk
+    ```
+
+3. Initialiser et configurer LVM :
+    ```bash
+    sudo pvcreate /dev/nvme0n2
+    sudo vgcreate cinder-volumes /dev/nvme0n2
+    sudo vgs
+    ```
+
+4. Répétez sur les **nœud de stockage** si vous en avez `storage01, storage02...`.
+
+---
+
+Mettre en place le partage NFS pour `/mnt/glance` sur vos 3 contrôleurs. Je propose `storage01` comme serveur NFS puisque c'est déjà un nœud dédié au stockage — c'est le choix le plus simple pour démarrer (notez que ça reste un point de défaillance unique tant que ce n'est pas un NAS/SAN redondant, mais ça suffit pour valider votre déploiement).
+
+**1. Sur `storage01` — créer et exporter le partage**
+
+```bash
+sudo dnf install -y nfs-utils
+
+sudo mkdir -p /srv/nfs/glance
+sudo chmod 755 /srv/nfs/glance
+
+# Adaptez le sous-réseau 172.20.10.0/24 à votre réseau de management réel
+echo "/srv/nfs/glance 172.20.10.0/24(rw,sync,no_subtree_check,no_root_squash)" | sudo tee -a /etc/exports
+
+sudo systemctl enable --now nfs-server
+sudo exportfs -ra
+sudo exportfs -v          # vérifie que l'export apparaît bien
+
+# Ouvrir le pare-feu pour le réseau de management
+sudo firewall-cmd --permanent --add-service=nfs --add-service=rpc-bind --add-service=mountd
+sudo firewall-cmd --reload
+```
+
+`no_root_squash` est important : c'est Ansible/Kolla qui, en tant que root sur les contrôleurs, doit pouvoir corriger les permissions du dossier au moment du déploiement de Glance — sans ça, le conteneur `glance-api` échouera à écrire dedans.
+
+**2. Sur `control01`, `control02` et `control03` — monter le partage**
+
+À répéter sur les **trois** contrôleurs, à l'identique :
+
+```bash
+sudo dnf install -y nfs-utils
+
+sudo mkdir -p /mnt/glance
+
+# storage01 = IP réelle de votre nœud storage, à adapter
+echo "172.20.10.41:/srv/nfs/glance /mnt/glance nfs defaults,_netdev 0 0" | sudo tee -a /etc/fstab
+
+sudo mount -a
+df -h /mnt/glance        # doit afficher le montage NFS, pas le disque local
+```
+
+**3. Vérifier que le partage est bien partagé entre les 3 nœuds**
+
+```bash
+# Sur control01
+sudo touch /mnt/glance/test-partage
+
+# Sur control02 et control03
+ls -la /mnt/glance/test-partage   # doit apparaître sur les deux
+
+# Puis nettoyez
+sudo rm /mnt/glance/test-partage
+```
+
+Si le fichier n'apparaît pas sur les autres nœuds, ne lancez pas `kolla-ansible deploy` — le montage n'est pas correctement partagé.
+
+**4. Point d'attention SELinux (Rocky Linux)**
+Si SELinux est en mode `enforcing` (par défaut sur Rocky), le bind-mount NFS → conteneur peut être bloqué même si le montage Linux fonctionne. Si vous voyez des erreurs de permission côté `glance-api` après déploiement malgré un montage qui fonctionne, vérifiez `ausearch -m avc -ts recent` et envisagez `sudo setsebool -P virt_use_nfs on`.
