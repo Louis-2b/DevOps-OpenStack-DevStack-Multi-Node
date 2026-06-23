@@ -209,12 +209,12 @@ Créez une nouvelle VM avec les ressources suivantes (minimum pour le nœud de b
 
 ### 1.2 Configuration réseau de la VM
 
-Ajoutez **deux cartes réseau (NIC)** à la machine virtuelle :
+Ajoutez **une deuxième cartes réseau (NIC)** à la machine virtuelle :
 
 | NIC | Réseau VMware | Rôle OpenStack |
 |-----|---------------|----------------|
-| NIC 1 (`ens160`) | Host-Only ou réseau de gestion | API, réplication, stockage |
-| NIC 2 (`ens192`) | Réseau externe (bridgé ou dédié) | Provider networks, IPs flottantes |
+| NIC 1 (`ens160`) | Bridged | API, réplication, stockage |
+| NIC 2 (`ens192`) | Bridged | Provider networks, IPs flottantes |
 
 ![Ajout carte réseau 1](Images/Pic-02.png)
 ![Ajout carte réseau 2](Images/Pic-03.png)
@@ -357,15 +357,22 @@ ip -br -4 addr show
 
 ---
 
-## Bonnes pratiques
+### Clonage de la machine virtuelle de base
 
-| Recommandation | Pourquoi |
-|----------------|----------|
-| Toujours cloner depuis `controller01` une fois la configuration de base terminée | Garantit une base identique sur tous les nœuds |
-| Configurer une IP statique sur `ens160` avant de passer en production | Évite les changements d'IP au redémarrage |
-| Ne jamais assigner d'IP à `ens192` | Neutron prend le contrôle complet de cette interface via OVS |
-| Utiliser un nombre impair de contrôleurs (3, 5, 7) | Requis pour le quorum MariaDB Galera et Keepalived |
-| Conserver une sauvegarde de `/etc/kolla/passwords.yml` | Contient tous les secrets — perte = déploiement irrécupérable |
-| Valider la syntaxe YAML après chaque modification de `globals.yml` | `python3 -c "import yaml; yaml.safe_load(open('/etc/kolla/globals.yml'))"` |
+1. Éteignez la machine virtuelle de base (`controller01`) avant le clonage.
+2. Utilisez l'option de clonage entièrement indépendante .
 
----
+![Screenshot 16](Images/Pic-15.png)
+
+![Screenshot 17](Images/Pic-16.png)
+
+![Screenshot 18](Images/Pic-17.png)
+
+![Screenshot 19](Images/Pic-18.png)
+
+![Screenshot 19](Images/Pic-19.png)
+
+3. Repeat the process to create the full architecture:
+   - `controller02`, `controller03`, `compute01`, `network01`, `storage01`.
+
+![Screenshot 20](Images/Pic-20.png)
