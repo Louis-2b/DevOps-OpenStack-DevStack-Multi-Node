@@ -372,7 +372,85 @@ ip -br -4 addr show
 
 ![Screenshot 19](Images/Pic-19.png)
 
-3. Repeat the process to create the full architecture:
+3. Répétez le processus pour créer l'architecture complète:
    - `controller02`, `controller03`, `compute01`, `network01`, `storage01`.
 
 ![Screenshot 20](Images/Pic-20.png)
+
+---
+
+### Configurer le nom d'hôte et l'adresse IP statique pour toutes les machines virtuelles
+
+Chaque machine virtuelle a besoin d'un nom d'hôte unique et d'une adresse IP statique .
+
+1. Définir le nom d'hôte :
+    ```bash
+    sudo hostnamectl set-hostname <hostname>
+    ```
+2. Valider:
+    ```bash
+    hostname
+    ```
+
+3. Configurer une adresse IP statique pour `ens160`:
+    ```bash
+    nmcli device status
+    ```
+
+  ```bash
+  sudo nmcli con mod ens160 ipv4.addresses 172.20.10.2/28
+  sudo nmcli con mod ens160 ipv4.gateway 172.20.10.1
+  sudo nmcli con mod ens160 ipv4.dns '8.8.8.8 1.1.1.1'
+  sudo nmcli con mod ens160 ipv4.method manual
+  ```
+
+  ```bash
+  sudo nmcli con down ens160 && sudo nmcli con up ens160
+  ip a show ens160
+  ```
+
+Répétez l'opération pour chaque machine virtuelle ayant l'adresse IP et le nom d'hôte appropriés.
+
+---
+
+### Configurer  `/etc/hosts` on `controller01`
+
+- Ce nœud servira d'hôte de déploiement pour Kolla-Ansible.
+- Ce fichier garantit que tous les nœuds du cluster peuvent être référencés par leur nom d'hôte lors du déploiement Kolla Ansible.
+- Les entrées DNS sur les autres nœuds seront gérées par Ansible.
+
+
+1. Ouvrez le fichier hosts :
+    ```bash
+    sudo nano /etc/hosts
+    ```
+
+2. Ajoutez ces entrées :
+    ```text
+    172.20.10.2 controller01
+    172.20.10.3 controller02
+    172.20.10.5 controller03
+    172.20.10.6 compute01
+    172.20.10.7 network01
+    172.20.10.8 storage01
+    ```
+
+3. Tester la portée :
+    ```bash
+    for host in controller01 controller02 controller03 compute01 network01 storage01; do
+      ping -c 1 $host >/dev/null && echo "$host is reachable" || echo "$host is NOT reachable"
+    done
+    ```
+---
+
+### Activer la virtualisation sur les machines virtuelles de calcul (`compute01`)
+
+1. Ouvrez les paramètres de la machine virtuelle pour chaque **nœud de calcul (`compute01`)** .
+
+![Screenshot 30](images/pic30.png)
+
+2. Activez la virtualisation dans les paramètres matériels.
+
+![Screenshot 31](images/pic31.png)
+
+3. Répétez si vous avez plusieurs **nœud de calcul (`compute01, compute02...`)**.
