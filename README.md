@@ -447,10 +447,10 @@ Répétez l'opération pour chaque machine virtuelle ayant l'adresse IP et le no
 
 1. Ouvrez les paramètres de la machine virtuelle pour chaque **nœud de calcul (`compute01`)** .
 
-![Screenshot 30](images/pic30.png)
+![Screenshot 30](Images/Pic-21.png)
 
 2. Activez la virtualisation dans les paramètres matériels.
 
-![Screenshot 31](images/pic31.png)
+![Screenshot 31](Images/Pic-22.png)
 
 3. Répétez si vous avez plusieurs **nœud de calcul (`compute01, compute02...`)**.
