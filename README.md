@@ -34,6 +34,11 @@
 - [Étape 6 — Partage NFS pour Glance](#étape-6--partage-nfs-pour-glance)
 - [Étape 7 — Accès SSH sans mot de passe](#étape-7--accès-ssh-sans-mot-de-passe)
 - [Étape 8 — Installation de Kolla-Ansible](#étape-8--installation-de-kolla-ansible)
+- [Étape 9 — Configuration de Kolla-Ansible](#étape-9--configuration-de-kolla-ansible)
+- [Étape 10 — Génération des certificats TLS](#étape-10--génération-des-certificats-tls)
+- [Étape 11 — Déploiement d'OpenStack](#étape-11--déploiement-dopenstack)
+- [Étape 12 — Post-déploiement et vérification](#étape-12--post-déploiement-et-vérification)
+- [Référence — Fichiers importants](#référence--fichiers-importants)
 
 ---
 
@@ -679,7 +684,7 @@ cp -r /usr/local/share/kolla-ansible/etc_examples/kolla/* /etc/kolla/
 cp /usr/local/share/kolla-ansible/ansible/inventory/multinode .
 ```
 
-> ℹ️ L'inventaire `multinode` est utilisé pour déployer une configuration OpenStack haute disponibilité sur plusieurs nœuds. Il devra être édité à l'étape suivante pour refléter votre architecture.
+> ℹ️ L'inventaire `multinode` est utilisé pour déployer une configuration OpenStack haute disponibilité sur plusieurs nœuds. Il sera édité à l'étape suivante pour refléter votre architecture.
 
 ### 8.6 Installer les dépendances Ansible Galaxy
 
@@ -696,175 +701,244 @@ ansible --version
 
 ---
 
-### Configurer les fichiers principaux
+## Étape 9 — Configuration de Kolla-Ansible
 
-#### `globals.yml`
+Kolla-Ansible repose sur trois fichiers de configuration principaux. Les deux premiers se trouvent dans `/etc/kolla/`, le troisième est l'inventaire Ansible.
 
-* **Chemin:** `/etc/kolla/globals.yml`
-* **Objectif:** Fichier de configuration principal pour la personnalisation du déploiement OpenStack.
+### 9.1 `globals.yml` — Configuration principale
+
+Ce fichier contrôle l'ensemble du comportement du déploiement : VIP, interfaces réseau, services activés, backends de stockage, etc.
+
+> **Fichier de référence :** [`Config/globals.yml`](Config/globals.yml)
 
 ```bash
 nano /etc/kolla/globals.yml
 ```
 
-Collez la configuration suivante :
+Copiez le contenu du fichier [`Config/globals.yml`](Config/globals.yml) du dépôt et adaptez au minimum les paramètres suivants à votre environnement :
 
-<details>
-Elle se trouve dans : Config/globals.yml du projet cliquer sur le lien pour accéder.
-
----
-
-#### `passwords.yml`
-
-* **Chemin:** `/etc/kolla/passwords.yml`
-* **Objectif:** Stocker les mots de passe générés automatiquement ou personnalisés pour tous les services OpenStack.
-* **Générez-le avec:**
-
-  ```bash
-  kolla-genpwd
-  ```
+| Paramètre | Description | Exemple |
+|-----------|-------------|---------|
+| `kolla_internal_vip_address` | IP virtuelle (VIP) HAProxy interne | `172.20.10.10` |
+| `network_interface` | Interface de gestion | `ens160` |
+| `neutron_external_interface` | Interface réseau externe (sans IP) | `ens192` |
+| `kolla_base_distro` | Distribution de base des conteneurs | `rocky` |
 
 ---
 
-#### Fichier d'inventaire `multinode`
+### 9.2 `passwords.yml` — Mots de passe des services
 
-* Définit les rôles et les groupes de nœuds pour le déploiement Ansible.
-
-<details>
-Elle se trouve dans : Config/multinode du projet cliquer sur le lien pour accéder.
-
----
-
-### **Étapes à suivre maintenant :**
-
-2. **Ajoute l’entrée dans `/etc/hosts`** (sur tous les nœuds + ton poste) :
-   ```bash
-   sudo tee -a /etc/hosts << EOF
-   172.20.10.14   openstack.tubie.lan   # Même IP que le VIP interne
-   EOF
-   ```
----
-
-### Certificats
+Ce fichier contient les mots de passe de tous les services OpenStack (base de données, RabbitMQ, Keystone, etc.). Il est généré automatiquement avec la commande suivante :
 
 ```bash
-# Certificats TLS généraux
+kolla-genpwd
+```
+
+> ⚠️ Ne commitez jamais ce fichier dans un dépôt public. Conservez-en une copie sécurisée hors du dépôt.
+
+---
+
+### 9.3 Inventaire `multinode` — Assignation des rôles
+
+L'inventaire définit quels nœuds jouent quels rôles lors du déploiement. Il doit refléter exactement votre architecture.
+
+> **Fichier de référence :** [`Config/multinode`](Config/multinode)
+
+Ouvrez le fichier copié à l'étape précédente :
+
+```bash
+nano ~/multinode
+```
+
+Copiez le contenu du fichier [`Config/multinode`](Config/multinode) du dépôt. La structure principale à adapter est la suivante :
+
+```ini
+[control]
+controller01
+controller02
+controller03
+
+[network]
+network01
+
+[compute]
+compute01
+
+[storage]
+storage01
+
+[monitoring]
+controller01
+
+[deployment]
+controller01
+```
+
+---
+
+### 9.4 Entrée DNS locale pour la VIP
+
+Ajoutez l'entrée de résolution de la VIP interne dans `/etc/hosts` sur **tous les nœuds** et sur votre poste de travail si vous souhaitez accéder à Horizon depuis un navigateur :
+
+```bash
+# Remplacez l'IP par votre kolla_internal_vip_address réelle
+sudo tee -a /etc/hosts << 'EOF'
+172.20.10.10   openstack.local
+EOF
+```
+
+---
+
+## Étape 10 — Génération des certificats TLS
+
+Kolla-Ansible génère les certificats TLS nécessaires à la sécurisation des API OpenStack et du service de load balancing Octavia.
+
+```bash
+# Certificats TLS pour tous les services OpenStack
 kolla-ansible certificates -i multinode
 
-# Certificats Octavia
+# Certificats spécifiques à Octavia (load balancer)
 kolla-ansible octavia-certificates -i multinode
 ```
 
----
-
-## 📁 Fichiers Importants
-
-- `/etc/kolla/globals.yml` → Configuration principale
-- `~/multinode` → Inventaire
-- `/etc/kolla/certificates/` → Certificats TLS
-- `/etc/kolla/config/octavia/` → Certificats Octavia
-- `/etc/hosts` → Doit contenir `openstack.tubie.lan`
+Les certificats générés sont stockés dans `/etc/kolla/certificates/` et `/etc/kolla/config/octavia/`.
 
 ---
 
-### 📤Déployer OpenStack
+## Étape 11 — Déploiement d'OpenStack
 
-1. **Initialiser les serveurs :**
-
-   ```bash
-   kolla-ansible bootstrap-servers -i ./multinode
-   ```
-
-![Screenshot 50](Images/Pic-29.png)
-
-2. **Effectuez les vérifications préalables au déploiement :**
-
-   ```bash
-   kolla-ansible prechecks -i ./multinode
-   ```
-
-![Screenshot 51](Images/Pic-30.png)
-
-3. **Déploiement d'OpenStack :**
-
-   ```bash
-   kolla-ansible deploy -i ./multinode
-   ```
-
-![Screenshot 52](Images/Pic-31.png)
-
-4. **Valider les configurations de service :**
-
-   ```bash
-   kolla-ansible validate-config -i ./multinode
-   ```
-
-![Screenshot 53](Images/Pic-32.png)
-
----
-
-### 🧪 Utilisation d'OpenStack après le déploiement
-
-1. **Configuration post-déploiement (génère `clouds.yaml`):**
-
-   ```bash
-   kolla-ansible post-deploy
-   ```
-
-![Screenshot 54](Images/Pic-33.png)
-
-2. **Vérifiez le fichier clouds.yaml**
-
-   ```bash
-   ls /etc/kolla/clouds.yaml
-   ```
-
-3. **Installer l'interface de ligne de commande OpenStack :**
-
-   ```bash
-   pip install python-openstackclient -c https://releases.openstack.org/constraints/upper/master
-   ```
-
-4. **Tester le déploiement :**
-
-- Essayez de lister les services :
+Le déploiement s'effectue en quatre commandes successives, toujours depuis `controller01` avec l'environnement virtuel activé.
 
 ```bash
-openstack service list
+source ~/kolla-ansible/bin/activate
 ```
 
-![Screenshot 56](Images/Pic-34.png)
+### 11.1 Initialisation des serveurs
 
-- Fichier source des identifiants d'administrateur OpenStack (`admin-openrc.sh`) permettant d'interagir avec l'interface de ligne de commande OpenStack.
+Prépare tous les nœuds (installation de Docker, configuration des répertoires Kolla, etc.) :
+
+```bash
+kolla-ansible bootstrap-servers -i ./multinode
+```
+
+![Bootstrap des serveurs](Images/Pic-29.png)
+
+### 11.2 Vérifications préalables
+
+Valide la configuration avant le déploiement (interfaces, ressources, connectivité) :
+
+```bash
+kolla-ansible prechecks -i ./multinode
+```
+
+![Vérifications préalables](Images/Pic-30.png)
+
+> ⚠️ Ne passez pas à l'étape suivante si des erreurs sont signalées. Corrigez-les d'abord.
+
+### 11.3 Déploiement
+
+Lance le déploiement complet de l'infrastructure OpenStack :
+
+```bash
+kolla-ansible deploy -i ./multinode
+```
+
+![Déploiement OpenStack](Images/Pic-31.png)
+
+Cette étape peut prendre **30 à 60 minutes** selon les ressources disponibles.
+
+### 11.4 Validation de la configuration
+
+Vérifie que tous les services sont correctement configurés après déploiement :
+
+```bash
+kolla-ansible validate-config -i ./multinode
+```
+
+![Validation de la configuration](Images/Pic-32.png)
+
+---
+
+## Étape 12 — Post-déploiement et vérification
+
+### 12.1 Générer le fichier d'authentification
+
+La commande `post-deploy` génère les fichiers `clouds.yaml` et `admin-openrc.sh` utilisés pour interagir avec l'API OpenStack :
+
+```bash
+kolla-ansible post-deploy
+```
+
+![Post-déploiement](Images/Pic-33.png)
+
+Vérifiez la présence des fichiers :
+
+```bash
+ls /etc/kolla/clouds.yaml /etc/kolla/admin-openrc.sh
+```
+
+### 12.2 Installer le client OpenStack
+
+```bash
+pip install python-openstackclient \
+  -c https://releases.openstack.org/constraints/upper/2024.2
+```
+
+### 12.3 Charger les variables d'environnement
 
 ```bash
 source /etc/kolla/admin-openrc.sh
 ```
 
-![Screenshot 57](Images/Pic-35.png)
+![Chargement des variables](Images/Pic-35.png)
 
-- Vérifier l'état des nœuds de calcul (compute):
+### 12.4 Vérifier l'état des services
 
 ```bash
+# Lister tous les services enregistrés dans Keystone
+openstack service list
+```
+
+![Liste des services](Images/Pic-34.png)
+
+```bash
+# Vérifier l'état des nœuds de calcul
 openstack compute service list
 ```
 
-5. Accédez au tableau de bord Horizon : ouvrez votre navigateur et rendez-vous à l’adresse suivante : http://192.168.142.250
+### 12.5 Accéder au tableau de bord Horizon
 
-   Identifiants de connexion :
+Ouvrez un navigateur et accédez à l'adresse de votre VIP interne :
 
-   * **Nom d'utilisateur:** `admin`
-   * **Mot de passe** (find it using)
+```
+http://<kolla_internal_vip_address>
+```
 
-     ```bash
-     grep keystone_admin_password /etc/kolla/passwords.yml
-     ```
+Identifiants de connexion :
 
-![Screenshot 59](Images/Pic-36.png)
+| Champ | Valeur |
+|-------|--------|
+| Nom d'utilisateur | `admin` |
+| Mot de passe | Obtenu avec la commande ci-dessous |
 
-![Screenshot 60](Images/Pic-37.png)
+```bash
+grep keystone_admin_password /etc/kolla/passwords.yml
+```
 
-![Screenshot 61](Images/Pic-38.png)
+![Écran de connexion Horizon](Images/Pic-36.png)
+![Tableau de bord Horizon](Images/Pic-37.png)
+![Vue d'ensemble du projet](Images/Pic-38.png)
 
 ---
 
+## Référence — Fichiers importants
+
+| Fichier | Emplacement | Description |
+|---------|-------------|-------------|
+| [`globals.yml`](Config/globals.yml) | `/etc/kolla/globals.yml` | Configuration principale du déploiement |
+| [`multinode`](Config/multinode) | `~/multinode` | Inventaire Ansible (rôles des nœuds) |
+| `passwords.yml` | `/etc/kolla/passwords.yml` | Mots de passe des services (généré par `kolla-genpwd`) |
+| `admin-openrc.sh` | `/etc/kolla/admin-openrc.sh` | Variables d'environnement pour le client CLI |
+| `clouds.yaml` | `/etc/kolla/clouds.yaml` | Configuration SDK OpenStack |
+| Certificats TLS | `/etc/kolla/certificates/` | Certificats des API OpenStack |
+| Certificats Octavia | `/etc/kolla/config/octavia/` | Certificats du load balancer |
