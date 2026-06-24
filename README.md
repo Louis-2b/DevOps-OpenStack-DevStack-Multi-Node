@@ -440,6 +440,7 @@ Cinder (stockage bloc) et Swift (stockage objet) nécessitent un disque dédié.
 ![Ajout disque étape 3](Images/Pic-25.png)
 ![Ajout disque étape 4](Images/Pic-26.png)
 ![Ajout disque étape 5](Images/Pic-27.png)
+![Ajout disque étape 5](Images/Pic-28.png)
 
 **Vérifier la détection du disque :**
 
@@ -474,7 +475,7 @@ sudo mkdir -p /srv/nfs/glance
 sudo chmod 755 /srv/nfs/glance
 
 # Exporter le partage vers le réseau de management
-echo "/srv/nfs/glance 172.20.10.0/24(rw,sync,no_subtree_check,no_root_squash)" | \
+echo "/srv/nfs/glance 172.20.10.0/28(rw,sync,no_subtree_check,no_root_squash)" | \
   sudo tee -a /etc/exports
 
 sudo systemctl enable --now nfs-server
