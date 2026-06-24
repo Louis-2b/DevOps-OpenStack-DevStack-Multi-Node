@@ -434,6 +434,7 @@ La virtualisation imbriquée est requise pour que KVM fonctionne à l'intérieur
 Cinder (stockage bloc) et Swift (stockage objet) nécessitent un disque dédié.
 
 **Ajouter un disque virtuel dans VMware :**
+> ⚠️ Un disque de 20GB pour Cinder et 3 disques de 20GB pour Swift.
 
 ![Ajout disque étape 1](Images/Pic-23.png)
 ![Ajout disque étape 2](Images/Pic-24.png)
@@ -457,6 +458,19 @@ sudo vgs  # validation
 ```
 
 > Adaptez `/dev/nvme0n2` au nom de disque détecté par `lsblk` sur votre système.
+
+---
+
+Parfait, les 3 disques sont bien là et libres (nvme0n3, nvme0n4, nvme0n5, 20G chacun, aucune partition). On peut enchaîner toute la procédure.
+1. Préparer les disques (sur storage01)
+⚠️ Toutes les données sur ces 3 disques seront perdues (ils sont vierges, donc pas de risque ici).
+
+index=0
+for d in nvme0n3 nvme0n4 nvme0n5; do
+    sudo parted /dev/${d} -s -- mklabel gpt mkpart KOLLA_SWIFT_DATA 1 -1
+    sudo mkfs.xfs -f -L d${index} /dev/${d}p1
+    (( index++ ))
+done
 
 ---
 
@@ -535,3 +549,145 @@ ausearch -m avc -ts recent
 # Autoriser l'accès NFS par les conteneurs virtuels
 sudo setsebool -P virt_use_nfs on
 ```
+
+---
+
+### Générer des clés SSH pour l'utilisateur `kolla`
+
+Nous allons maintenant générer une clé SSH pour l'utilisateur `kolla` on `controller01` et copier la clé publique sur tous les autres nœuds du même utilisateur (`kolla`). Cette étape est essentielle pour l'accès SSH sans mot de passe, utilisé par Kolla Ansible pour opérer sur les nœuds distants.
+
+
+1. Connectez-vous en tant que `kolla` sur `controller01`.
+
+2. Générer une paire de clés:
+    ```bash
+    ssh-keygen -t rsa -b 4096 -N "" -f ~/.ssh/id_rsa
+    ```
+
+3.Copiez la clé publique sur tous les nœuds :
+    ```bash
+    for host in controller01 controller02 controller03 compute01 network01 storage01; do
+      ssh-copy-id kolla@$host
+    done
+    ```
+
+> 📌 Le mot de passe de l'utilisateur `kolla` vous sera demandé sur chaque hôte.
+
+4. Test:
+    ```bash
+    ssh kolla@controller03
+    ```
+
+---
+
+## Installation d'OpenStack avec Kolla-Ansible
+
+Toutes les étapes suivantes sont exécutées sur le nœud de déploiement ( controller01), qui orchestre l'environnement OpenStack complet à l'aide de Kolla Ansible.
+
+
+---
+
+### Installer les dépendances
+
+1. Mise à jour des paquets système :
+   ```bash
+   sudo dnf update -y
+   ```
+
+2. Installer les dépendances de compilation Python :
+    ```bash
+   sudo dnf install git python3-devel libffi-devel gcc openssl-devel python3-libselinux -y
+   ```
+    
+### Créer un environnement virtuel pour le déploiement de Kolla-ansible
+Pour éviter les conflits entre les paquets système et les paquets Kolla-ansible, il est recommandé d'installer Kolla-ansible dans un environnement virtuel.
+
+1. Vous pouvez créer un environnement virtuel sur le nœud ( controller01) en exécutant la commande ci-dessous. Veillez à remplacer le chemin d'accès à votre environnement virtuel.
+
+   ```bash
+   mkdir ~/kolla-ansible
+   ```
+
+2. Créez un nouvel environnement virtuel
+
+   ```bash
+   python3 -m venv ~/kolla-ansible
+   ```
+
+3. Activez-le
+
+   ```bash
+   source ~/kolla-ansible/bin/activate
+   ```
+
+4. Mettez à jour pip lui-même
+   
+   ```bash
+   pip install --upgrade pip
+   ```
+
+---
+
+## Installer Ansible sur Rocky 10.2
+
+1. Installez ansible-core
+   ```bash
+    pip install ansible-core
+   ```
+
+2. Créez un fichier de configuration Ansible dans votre répertoire personnel avec les paramètres suivants :
+   ```bash
+    nano $HOME/ansible.cfg
+   ```
+   ```bash
+    [defaults]
+    host_key_checking=False
+    pipelining=True
+    forks=100
+   ```
+> Enregistrez et fermez le fichier Ctrl + O + Entrée + x.
+
+
+## Installez Kolla-ansible sur Rocky 10.2
+
+Installez Kolla-ansible sur sur Rocky 10.2 en utilisant pip depuis l'environnement virtuel ci-dessus :
+ ```bash
+   source ~/kolla-ansible/bin/activate
+   ```
+   
+1. Installez kolla-ansible
+   ```bash
+   pip install kolla-ansible
+   ```
+
+2. Créez le répertoire de configuration :
+
+   ```bash
+   sudo mkdir -p /etc/kolla
+   sudo chown $USER:$USER /etc/kolla
+   ```
+
+3. Copiez les fichiers de configuration d'exemple :
+
+   ```bash
+   cp -r /usr/local/share/kolla-ansible/etc_examples/kolla/* /etc/kolla/
+   ```
+
+4. Copiez le fichier d'inventaire multinœud dans le répertoire courant :
+
+   ```bash
+   cp /usr/local/share/kolla-ansible/ansible/inventory/multinode .
+   ```
+
+   > ℹ️ Nous utilisons multinode pour déployer une configuration OpenStack hautement disponible sur plusieurs nœuds.
+
+   
+2. Installer les dépendances d'Ansible Galaxy
+    ```bash
+   kolla-ansible install-deps
+   ```
+
+---
+
+
+
