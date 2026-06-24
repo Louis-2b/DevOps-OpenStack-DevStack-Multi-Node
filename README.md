@@ -13,272 +13,270 @@
 
 ---
 
-## Table des matières
+## 📋 Table des matières
 
 - [Présentation](#présentation)
 - [Prérequis](#prérequis)
-- [Environnement de test](#environnement-de-test)
 - [Architecture du déploiement](#architecture-du-déploiement)
 - [Rôles des nœuds](#rôles-des-nœuds)
-  - [Contrôleurs](#contrôleurs----controller01-controller02-controller03)
-  - [Réseau](#réseau----network01)
-  - [Calcul](#calcul----compute01)
-  - [Stockage](#stockage----storage01)
-- [Interfaces réseau](#interfaces-réseau)
+- [Plan d'adressage réseau](#plan-dadressage-réseau)
+- [Étape 1 : Création de la VM de base](#étape-1--création-de-la-vm-de-base)
+- [Étape 2 : Installation de Rocky Linux 10.2](#étape-2--installation-de-rocky-linux-102)
+- [Étape 3 : Configuration post-installation](#étape-3--configuration-post-installation)
+- [Étape 4 : Clonage et configuration des nœuds](#étape-4--clonage-et-configuration-des-nœuds)
+- [Étape 5 : Configuration spécifique par rôle](#étape-5--configuration-spécifique-par-rôle)
+- [Étape 6 : Configuration du partage NFS](#étape-6--configuration-du-partage-nfs)
+- [Étape 7 : Préparation SSH et installation de Kolla-Ansible](#étape-7--préparation-ssh-et-installation-de-kolla-ansible)
 - [Services déployés](#services-déployés)
-- [Étape 1 — Création de la VM de base](#étape-1--création-de-la-vm-de-base)
-- [Étape 2 — Installation de Rocky Linux 10.2](#étape-2--installation-de-rocky-linux-102)
-- [Étape 3 — Configuration post-installation](#étape-3--configuration-post-installation)
-- [Étape 4 — Clonage et personnalisation des nœuds](#étape-4--clonage-et-personnalisation-des-nœuds)
-- [Étape 5 — Configuration spécifique par rôle](#étape-5--configuration-spécifique-par-rôle)
-- [Étape 6 — Partage NFS pour Glance](#étape-6--partage-nfs-pour-glance)
+- [Vérification et validation](#vérification-et-validation)
+- [Annexes](#annexes)
 
 ---
 
-## Présentation
+## 🎯 Présentation
 
-Ce projet documente le déploiement complet d'un environnement **cloud OpenStack à haute disponibilité (HA)** à l'aide de **Kolla-Ansible** sur **Rocky Linux 10.2**.
+Ce projet documente le déploiement complet d'un **cloud OpenStack à haute disponibilité (HA)** à l'aide de **Kolla-Ansible** sur **Rocky Linux 10.2**.
 
-L'infrastructure repose sur les composants suivants :
+### Objectifs
 
-- Architecture multi-nœuds : contrôleurs, calcul, réseau, stockage
-- Conteneurisation complète avec **Docker**
-- Cluster **Galera** + **HAProxy** + **Keepalived** pour la haute disponibilité
-- Configuration centralisée via **Ansible**
-- Machines virtuelles provisionnées sous **VMware Workstation**
+- Fournir une infrastructure cloud résiliente et scalable
+- Automatiser le déploiement via Kolla-Ansible
+- Assurer la haute disponibilité des services critiques
+- Conteneuriser l'ensemble des services OpenStack avec Docker
+- Mettre en place une architecture multi-nœuds conforme aux bonnes pratiques
 
-> Ce guide s'adresse aux ingénieurs **DevOps**, aux architectes **cloud** et aux administrateurs système avancés souhaitant reproduire ce déploiement en laboratoire ou en production.
+### Composants clés
 
----
-
-## Prérequis
-
-Avant de commencer, assurez-vous de maîtriser les bases de :
-
-- Administration **Linux** (gestion des utilisateurs, systemd, partitions)
-- **Réseaux** (interfaces, routage, VLAN)
-- **Ansible** (inventaires, playbooks, rôles)
-
----
-
-## Environnement de test
-
-| Composant | Version / Détail |
-|-----------|-----------------|
-| Système d'exploitation | Rocky Linux 10.2 (ISO minimal) |
-| Plateforme cloud | OpenStack 2024.2 (Dalmatian) |
-| Outil de déploiement | Kolla-Ansible |
+| Composant | Version |
+|-----------|---------|
+| OpenStack | 2024.2 (Dalmatian) |
+| Système d'exploitation | Rocky Linux 10.2 |
 | Moteur de conteneurs | Docker |
+| Orchestrateur | Kolla-Ansible |
+| Base de données | MariaDB Galera Cluster |
+| File d'attente | RabbitMQ HA |
+| Équilibrage de charge | HAProxy + Keepalived |
 | Hyperviseur | VMware Workstation |
-| Orchestrateur | Ansible |
+
+> **Public cible :** Ingénieurs DevOps, architectes cloud, administrateurs systèmes avancés.
 
 ---
 
-## Architecture du déploiement
+## 📌 Prérequis
 
-Le cluster est composé de **6 nœuds** provisionnés sous VMware Workstation. Une VM de base (`controller01`) a été créée puis clonée pour produire les nœuds supplémentaires. Chaque nœud fonctionne sous **Rocky Linux 10.2 (ISO minimal)** et dispose de ressources adaptées à son rôle.
+Avant de commencer, assurez-vous de maîtriser :
 
-| Nom d'hôte | Rôle | IPv4 | vCPU | RAM (Go) | Stockage (Go) | Notes |
-|------------|------|------|------|----------|---------------|-------|
-| `controller01` | Contrôleur | 172.20.10.2 | 8 | 24 | 150–200 | Nœud de déploiement Kolla |
-| `controller02` | Contrôleur | 172.20.10.3 | 8 | 24 | 150–200 | |
-| `controller03` | Contrôleur | 172.20.10.5 | 8 | 24 | 150–200 | |
-| `compute01` | Calcul | 172.20.10.6 | 4 | 16 | 100 | Virtualisation imbriquée activée |
-| `network01` | Réseau | 172.20.10.7 | 4 | 16 | 80 | |
-| `storage01` | Stockage | 172.20.10.8 | 4 | 8 | 100 + 60 (Swift) | Volume LVM pour Cinder |
+- **Linux** : Gestion des utilisateurs, systemd, partitions, SELinux
+- **Réseaux** : Configuration d'interfaces, routage, VLAN
+- **Ansible** : Inventaires, playbooks, rôles (niveau intermédiaire)
+- **VMware** : Création et configuration de machines virtuelles
 
-> ⚠️ **Règle de quorum HA :** Les nœuds contrôleurs doivent toujours être en **nombre impair** (3, 5, 7…) afin que le cluster MariaDB Galera et Keepalived puissent élire un leader en cas de défaillance.
+### Ressources matérielles requises
 
----
+| Nœud | CPU | RAM | Disque |
+|------|-----|-----|--------|
+| Contrôleur (x3) | 8 vCPU | 24 Go | 150-200 Go |
+| Compute (x1) | 4 vCPU | 16 Go | 100 Go |
+| Network (x1) | 4 vCPU | 16 Go | 80 Go |
+| Storage (x1) | 4 vCPU | 8 Go | 100 Go + 60 Go (Swift) |
 
-## Rôles des nœuds
-
-### Contrôleurs — `controller01`, `controller02`, `controller03`
-
-Les nœuds de contrôle forment le **plan de contrôle** du cloud OpenStack. Ils hébergent toutes les API, la base de données, la messagerie et l'équilibrage de charge.
-
-| Service | Description |
-|---------|-------------|
-| `Keystone` | Gestion des identités et authentification |
-| `Glance` | Catalogue d'images (stockage local sur `/mnt/glance`) |
-| `Nova API / Scheduler / Conductor` | Gestion des ressources de calcul |
-| `Neutron Server` | API réseau |
-| `Horizon` | Interface web (Dashboard) |
-| `MariaDB (Galera)` | Base de données en cluster HA |
-| `RabbitMQ` | File d'attente de messages (HA) |
-| `Memcached` | Cache de sessions |
-| `HAProxy + Keepalived` | Équilibrage de charge et VIP haute disponibilité |
-| `Prometheus + Grafana` | Monitoring et métriques |
+**Total approximatif :** 40 vCPU, 112 Go RAM, 1,1 To stockage
 
 ---
 
-### Réseau — `network01`
+## 🏗 Architecture du déploiement
 
-Le nœud réseau gère toute la connectivité des instances.
+### Vue d'ensemble
 
-| Service | Description |
-|---------|-------------|
-| `Neutron OVS Agent` | Réseaux overlay (VXLAN / GRE) |
-| `Neutron L3 Agent` | Routage inter-réseaux et NAT |
-| `Neutron DHCP Agent` | Attribution d'adresses IP aux instances |
-| `Neutron Metadata Agent` | Fourniture de métadonnées aux instances |
+Le cluster est composé de **6 nœuds** provisionnés sous VMware Workstation. La VM `controller01` sert de template pour le clonage des autres nœuds.
 
----
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    RÉSEAU DE GESTION (172.20.10.0/28)          │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐             │
+│  │ Controller01 │  │ Controller02 │  │ Controller03 │             │
+│  │  .2          │  │  .3          │  │  .5          │             │
+│  └──────┬──────┘  └──────┬──────┘  └──────┬──────┘             │
+│         │                │                │                     │
+│         └────────────────┼────────────────┘                     │
+│                          │                                      │
+│          ┌───────────────┼───────────────┐                     │
+│          │               │               │                     │
+│  ┌───────┴───────┐ ┌─────┴─────┐ ┌───────┴───────┐             │
+│  │  Compute01    │ │ Network01 │ │  Storage01    │             │
+│  │  .6           │ │  .7       │ │  .8           │             │
+│  └───────────────┘ └───────────┘ └───────────────┘             │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
 
-### Calcul — `compute01`
+### Plan d'adressage réseau
 
-Le nœud de calcul exécute les machines virtuelles des locataires (tenants).
+| Nom d'hôte | Rôle | IPv4 (ens160) | vCPU | RAM | Stockage |
+|------------|------|--------------|------|-----|----------|
+| `controller01` | Contrôleur + Déploiement | 172.20.10.2 | 8 | 24 Go | 200 Go |
+| `controller02` | Contrôleur | 172.20.10.3 | 8 | 24 Go | 200 Go |
+| `controller03` | Contrôleur | 172.20.10.5 | 8 | 24 Go | 200 Go |
+| `compute01` | Calcul | 172.20.10.6 | 4 | 16 Go | 100 Go |
+| `network01` | Réseau | 172.20.10.7 | 4 | 16 Go | 80 Go |
+| `storage01` | Stockage | 172.20.10.8 | 4 | 8 Go | 160 Go |
 
-| Service | Description |
-|---------|-------------|
-| `Nova Compute` | Cycle de vie des VMs |
-| `Libvirt / KVM` | Hyperviseur pour l'exécution des VMs |
-| `Neutron OVS Agent` | Connectivité réseau des VMs |
-| `Ceilometer Compute` | Collecte de métriques au niveau compute |
-| `Prometheus Node Exporter` | Monitoring des ressources du nœud |
+> **⚠️ Règle de quorum :** Les contrôleurs doivent être en **nombre impair** (3, 5, 7…) pour que Galera et Keepalived fonctionnent correctement en HA.
 
----
+### Interfaces réseau
 
-### Stockage — `storage01`
-
-Le nœud de stockage fournit du stockage persistant en mode bloc et objet.
-
-| Service | Description |
-|---------|-------------|
-| `Cinder Volume` | Volumes bloc (backend LVM) |
-| `Cinder Backup` | Sauvegarde des volumes vers Swift |
-| `LVM` | Gestion des volumes logiques (`cinder-volumes`) |
-| `iscsid / tgtd` | Services iSCSI pour les volumes Cinder |
-| `Swift (account / container / object)` | Stockage objet distribué |
-| `Prometheus Node Exporter` | Monitoring des ressources du nœud |
-
----
-
-## Interfaces réseau
-
-Chaque nœud dispose d'**au moins deux interfaces réseau** :
+Chaque nœud dispose de **deux interfaces réseau** :
 
 | Interface | Rôle | Configuration |
 |-----------|------|---------------|
-| `ens160` | Réseau de gestion (API, réplication, stockage) | IP statique |
-| `ens192` | Réseau externe (IPs flottantes, provider networks) | Sans adresse IP — géré par Neutron (OVS bridge) |
+| `ens160` | Réseau de gestion (API, réplication, stockage) | IP statique dans 172.20.10.0/28 |
+| `ens192` | Réseau externe (flottantes, provider) | **Sans IP** — gérée par Neutron (OVS) |
 
-> ⚠️ Les noms d'interfaces (`ens160`, `ens192`) peuvent varier selon la configuration de l'hyperviseur. Vérifiez toujours avec `ip a` après création ou clonage d'une VM.
-
----
-
-## Services déployés
-
-### Services cœur
-
-| Service | Statut | Description |
-|---------|--------|-------------|
-| **Keystone** | ✅ Activé | Authentification et identité |
-| **Glance** | ✅ Activé | Catalogue d'images |
-| **Nova** | ✅ Activé | Service de calcul |
-| **Neutron** | ✅ Activé | Service réseau (OVS) |
-| **Horizon** | ✅ Activé | Dashboard web |
-| **Heat** | ✅ Activé | Orchestration (stacks) |
-| **Cinder** | ✅ Activé | Stockage bloc (LVM) |
-
-### Monitoring et télémétrie
-
-| Service | Statut | Description |
-|---------|--------|-------------|
-| **Prometheus** | ✅ Activé | Collecte de métriques |
-| **Grafana** | ✅ Activé | Visualisation des métriques |
-| **Ceilometer** | ✅ Activé | Collecte des données de consommation |
-| **Aodh** | ✅ Activé | Alertes et alarmes |
-| **Gnocchi** | ✅ Activé | Stockage des métriques (backend `file`) |
-
-### Services avancés
-
-| Service | Statut | Description |
-|---------|--------|-------------|
-| **Zun** | ✅ Activé | Gestion des conteneurs applicatifs |
-| **Kuryr** | ✅ Activé | Intégration réseau pour les conteneurs |
-| **Swift** | ✅ Activé | Stockage objet distribué |
-| **Barbican** | ✅ Activé | Gestion des secrets et chiffrement |
-| **Magnum** | ✅ Activé | Orchestration Kubernetes (clusters K8s) |
-| **Designate** | ✅ Activé | DNS as a Service |
-| **Octavia** | ✅ Activé | Load Balancer as a Service |
+> **Note :** Les noms d'interface peuvent varier (`ens160`, `ens192`, `eth0`, etc.). Vérifiez avec `ip a` après création.
 
 ---
 
-## Étape 1 — Création de la VM de base
+## 🎭 Rôles des nœuds
 
-Créez une VM de référence (`controller01`) qui servira de base pour le clonage de tous les autres nœuds.
+### Contrôleurs (`controller01`, `controller02`, `controller03`)
 
-### 1.1 Ressources matérielles
+Les nœuds de contrôle forment le **plan de contrôle** du cloud.
 
-| Paramètre | Valeur recommandée |
-|-----------|-------------------|
-| vCPU | 4 (minimum 2) |
-| RAM | 16 Go (minimum 8 Go) |
-| Disque | 60 Go+ |
-| Type de disque | Thin Provision |
+| Service | Fonction |
+|---------|----------|
+| **Keystone** | Authentification et gestion des identités |
+| **Glance** | Catalogue d'images (stockage NFS partagé) |
+| **Nova API/Scheduler/Conductor** | Orchestration des ressources de calcul |
+| **Neutron Server** | API réseau |
+| **Horizon** | Interface web d'administration |
+| **MariaDB (Galera)** | Base de données clusterisée HA |
+| **RabbitMQ** | File d'attente de messages (mode HA) |
+| **Memcached** | Cache de sessions |
+| **HAProxy + Keepalived** | Équilibrage de charge + VIP HA |
+| **Prometheus + Grafana** | Monitoring et visualisation |
+| **Heat** | Orchestration (stacks) |
+| **Barbican** | Gestion des secrets |
 
-![Spécifications de la VM](Images/Pic-01.png)
+### Nœud réseau (`network01`)
 
-### 1.2 Configuration réseau
+Gère la connectivité réseau des instances.
 
-Ajoutez **deux cartes réseau** à la VM :
+| Service | Fonction |
+|---------|----------|
+| **Neutron OVS Agent** | Réseaux overlay (VXLAN/GRE) |
+| **Neutron L3 Agent** | Routage inter-réseaux et NAT |
+| **Neutron DHCP Agent** | Attribution d'IP aux instances |
+| **Neutron Metadata Agent** | Métadonnées pour les instances |
 
-| NIC | Mode VMware | Rôle OpenStack |
-|-----|-------------|----------------|
-| NIC 1 (`ens160`) | Bridged | API, réplication, stockage |
-| NIC 2 (`ens192`) | Bridged | Provider networks, IPs flottantes |
+### Nœud de calcul (`compute01`)
 
-![Ajout NIC 1](Images/Pic-02.png)
-![Ajout NIC 2](Images/Pic-03.png)
-![Résumé de configuration](Images/Pic-04.png)
+Exécute les machines virtuelles des locataires.
+
+| Service | Fonction |
+|---------|----------|
+| **Nova Compute** | Cycle de vie des VMs |
+| **Libvirt/KVM** | Hyperviseur (virtualisation imbriquée) |
+| **Neutron OVS Agent** | Connectivité réseau des VMs |
+| **Ceilometer Compute** | Métriques au niveau compute |
+
+### Nœud de stockage (`storage01`)
+
+Fournit du stockage persistant en mode bloc et objet.
+
+| Service | Fonction |
+|---------|----------|
+| **Cinder Volume** | Volumes bloc (backend LVM) |
+| **Cinder Backup** | Sauvegarde vers Swift |
+| **LVM** | Gestion des volumes logiques |
+| **iSCSI/tgtd** | Export iSCSI pour Cinder |
+| **Swift** | Stockage objet distribué (account/container/object) |
 
 ---
 
-## Étape 2 — Installation de Rocky Linux 10.2
+## 🖥 Étape 1 : Création de la VM de base
 
-> **Télécharger l'ISO Rocky Linux 10.2 (minimal) :** [https://rockylinux.org/download](https://rockylinux.org/download)
+Créez une VM `controller01` qui servira de template.
+
+### 1.1 Spécifications matérielles
+
+| Paramètre | Valeur |
+|-----------|--------|
+| vCPU | 8 (minimum 4) |
+| RAM | 24 Go (minimum 16 Go) |
+| Disque | 200 Go (Thin Provision) |
+| NIC 1 (ens160) | Bridged |
+| NIC 2 (ens192) | Bridged |
+
+![Spécifications VM](Images/Pic-01.png)
+
+### 1.2 Configuration réseau dans VMware
+
+1. **Ajouter NIC 1** (réseau de gestion) :
+   - Mode : Bridged
+   - Connectée au démarrage : Oui
+
+   ![Ajout NIC 1](Images/Pic-02.png)
+
+2. **Ajouter NIC 2** (réseau externe) :
+   - Mode : Bridged
+   - Connectée au démarrage : Oui
+
+   ![Ajout NIC 2](Images/Pic-03.png)
+
+3. **Vérification finale** :
+   ![Résumé configuration](Images/Pic-04.png)
+
+---
+
+## 💿 Étape 2 : Installation de Rocky Linux 10.2
+
+### 2.1 Téléchargement
+
+Téléchargez l'ISO minimal : [Rocky Linux 10.2](https://rockylinux.org/download)
+
+### 2.2 Installation
 
 Démarrez la VM et lancez l'installation.
 
-![Démarrage de l'installation](Images/Pic-05.png)
+![Démarrage](Images/Pic-05.png)
 
-### 2.1 Langue d'installation
+#### Configuration à effectuer
 
-Sélectionnez la langue souhaitée (le Français est supporté).
+| Paramètre | Action |
+|-----------|--------|
+| Langue | Français ou Anglais |
+| Partitionnement | Automatique (LVM recommandé) |
+| Réseau | Configurer `ens160` et `ens192` |
+| Fuseau horaire | Europe/Paris (ou votre région) |
+| Mot de passe root | Définir un mot de passe fort |
+| Utilisateur | Créer `kolla` (administrateur) |
 
-![Choix de la langue](Images/Pic-06.png)
+![Écran configuration](Images/Pic-07.png)
 
-### 2.2 Paramètres à configurer
+#### Configuration réseau détaillée
 
-| Paramètre | Recommandation |
-|-----------|----------------|
-| Partitionnement | Automatique ou manuel (LVM recommandé) |
-| Réseau et nom d'hôte | Configurer `ens160` et `ens192` |
-| Fuseau horaire | Votre région |
-| Mot de passe root | Fort, noté en lieu sûr |
-| Utilisateur dédié | `kolla` |
+1. **`ens160` (réseau de gestion)** :
+   - Activer DHCP temporairement
+   - L'IP statique sera configurée après installation
 
-![Écran de configuration](Images/Pic-07.png)
-
-### 2.3 Configuration réseau
-
-- **`ens160`** : Activez le DHCP pour l'instant — l'IP statique sera configurée après installation.
-- **`ens192`** : Désactivez entièrement IPv4. Cette interface sera gérée exclusivement par Neutron (OVS bridge) et **ne doit pas avoir d'adresse IP système**.
+2. **`ens192` (réseau externe)** :
+   - **Désactiver IPv4 complètement**
+   - Cette interface sera gérée par Neutron
 
 ![Configuration NIC 1](Images/Pic-10.png)
 ![Configuration NIC 2](Images/Pic-11.png)
-![Activation de l'interface](Images/Pic-12.png)
 
 Validez et lancez l'installation.
 
-![Lancement de l'installation](Images/Pic-14.png)
+![Lancement](Images/Pic-14.png)
 
 ---
 
-## Étape 3 — Configuration post-installation
+## ⚙️ Étape 3 : Configuration post-installation
 
-Une fois Rocky Linux installé et la VM redémarrée, effectuez les opérations suivantes **en tant que `root`** sur `controller01`, **avant tout clonage**.
+> **Effectuer toutes ces opérations sur `controller01` AVANT tout clonage.**
 
 ### 3.1 Mise à jour du système
 
@@ -286,68 +284,62 @@ Une fois Rocky Linux installé et la VM redémarrée, effectuez les opérations 
 sudo dnf update -y
 ```
 
-### 3.2 Création et configuration de l'utilisateur `kolla`
+### 3.2 Configuration de l'utilisateur `kolla`
 
-L'utilisateur `kolla` exécutera Kolla-Ansible sur tous les nœuds. Il doit disposer de droits `sudo` sans mot de passe (requis pour les tâches d'élévation de privilèges Ansible).
+L'utilisateur `kolla` exécutera Kolla-Ansible sur tous les nœuds.
 
 ```bash
-# Ajout au groupe wheel (sudo)
-usermod -aG wheel kolla
+# Ajouter au groupe wheel pour sudo
+sudo usermod -aG wheel kolla
 
 # Vérification
 grep wheel /etc/group
 ```
 
-Configurez ensuite `sudo` sans mot de passe pour le groupe `wheel` :
+**Configurer sudo sans mot de passe :**
 
 ```bash
-# Vérification syntaxique préalable
+# Vérification syntaxique initiale
 sudo visudo -c
 
-# Modification de sudoers :
-# - Commente  : %wheel ALL=(ALL) ALL
-# - Décommente : %wheel ALL=(ALL) NOPASSWD: ALL
+# Modification de sudoers
 sudo sed -i \
   -e 's/^\s*%wheel\s*ALL=(ALL)\s*ALL\s*$/# &/' \
   -e 's/^\s*#\s*%wheel\s*ALL=(ALL)\s*NOPASSWD:\s*ALL\s*$/%wheel ALL=(ALL) NOPASSWD: ALL/' \
   /etc/sudoers
 
-# Vérification syntaxique après modification — ne pas sauter cette étape
+# Vérification syntaxique finale
 sudo visudo -c
 ```
 
 ### 3.3 Installation des paquets prérequis
 
 ```bash
-# Outils d'archivage requis pour certains rôles Ansible
-sudo dnf install -y tar gzip unzip
-
-# OpenSSL requis pour la génération des certificats TLS
-sudo dnf install -y openssl
+sudo dnf install -y tar gzip unzip openssl
 ```
 
-### 3.4 Vérification des interfaces réseau
+### 3.4 Vérification réseau
 
 ```bash
-# Affichage de toutes les interfaces et adresses IP
+# Lister toutes les interfaces
 ip a
 
-# Affichage compact (nom + état + adresse IPv4)
+# Affichage compact des IP
 ip -br -4 addr show
 ```
 
 **Résultat attendu :**
-- `ens160` — UP, avec une adresse IP (DHCP temporaire)
-- `ens192` — UP ou DOWN, **sans adresse IP**
+- `ens160` : UP avec IP (DHCP temporaire)
+- `ens192` : UP (ou DOWN) **sans IP**
 
 ---
 
-## Étape 4 — Clonage et personnalisation des nœuds
+## 🧬 Étape 4 : Clonage et configuration des nœuds
 
-### 4.1 Clonage de la VM de base
+### 4.1 Clonage des VMs
 
-1. Éteignez `controller01` avant de cloner.
-2. Utilisez l'option **clonage entièrement indépendant** dans VMware.
+1. **Éteindre `controller01`** avant de cloner.
+2. Utiliser l'option **"Full Clone"** (clone indépendant) dans VMware.
 
 ![Clonage étape 1](Images/Pic-15.png)
 ![Clonage étape 2](Images/Pic-16.png)
@@ -355,46 +347,44 @@ ip -br -4 addr show
 ![Clonage étape 4](Images/Pic-18.png)
 ![Clonage étape 5](Images/Pic-19.png)
 
-3. Répétez pour créer : `controller02`, `controller03`, `compute01`, `network01`, `storage01`.
+3. Répéter pour : `controller02`, `controller03`, `compute01`, `network01`, `storage01`.
 
 ![Architecture complète](Images/Pic-20.png)
 
-### 4.2 Nom d'hôte et adresse IP statique
+### 4.2 Configuration de chaque nœud
 
-À réaliser sur **chaque nœud** après clonage.
+> **À effectuer sur CHAQUE nœud après clonage.**
 
-**Définir le nom d'hôte :**
+#### Définir le nom d'hôte
 
 ```bash
 sudo hostnamectl set-hostname <hostname>
-hostname  # validation
+hostname  # Vérification
 ```
 
-**Configurer l'IP statique sur `ens160` :**
+#### Configurer l'IP statique sur `ens160`
 
 ```bash
-nmcli device status
-
+# Remplacer X par l'IP du nœud (voir tableau d'adressage)
 sudo nmcli con mod ens160 ipv4.addresses 172.20.10.X/28
 sudo nmcli con mod ens160 ipv4.gateway 172.20.10.1
 sudo nmcli con mod ens160 ipv4.dns '8.8.8.8 1.1.1.1'
 sudo nmcli con mod ens160 ipv4.method manual
 
+# Redémarrer l'interface
 sudo nmcli con down ens160 && sudo nmcli con up ens160
-ip a show ens160  # validation
+
+# Vérifier
+ip a show ens160
 ```
 
-> Remplacez `172.20.10.X` par l'adresse IP correspondant au nœud (voir [tableau d'architecture](#architecture-du-déploiement)).
+### 4.3 Configuration du fichier `/etc/hosts`
 
-### 4.3 Fichier `/etc/hosts` sur `controller01`
-
-`controller01` est le nœud de déploiement Kolla-Ansible. Ce fichier lui permet de résoudre tous les nœuds par nom d'hôte. Les entrées DNS sur les autres nœuds seront propagées par Ansible.
+**Sur `controller01` uniquement**, ajoutez les entrées suivantes :
 
 ```bash
 sudo nano /etc/hosts
 ```
-
-Ajoutez les entrées suivantes :
 
 ```text
 172.20.10.2  controller01
@@ -405,7 +395,7 @@ Ajoutez les entrées suivantes :
 172.20.10.8  storage01
 ```
 
-Vérifiez la connectivité vers tous les nœuds :
+**Tester la connectivité :**
 
 ```bash
 for host in controller01 controller02 controller03 compute01 network01 storage01; do
@@ -415,88 +405,94 @@ done
 
 ---
 
-## Étape 5 — Configuration spécifique par rôle
+## 🔧 Étape 5 : Configuration spécifique par rôle
 
-### 5.1 Activer la virtualisation imbriquée sur `compute01`
+### 5.1 Virtualisation imbriquée sur `compute01`
 
-La virtualisation imbriquée est requise pour que KVM fonctionne à l'intérieur d'une VM VMware.
+Activez la virtualisation imbriquée pour que KVM fonctionne dans la VM.
 
-1. Ouvrez les paramètres de la VM `compute01`.
-2. Activez l'option de virtualisation dans les paramètres du processeur.
+1. Ouvrir les paramètres de `compute01` dans VMware
+2. Activer **"Virtualize Intel VT-x/EPT or AMD-V/RVI"**
 
 ![Paramètres compute01](Images/Pic-21.png)
-![Activation virtualisation imbriquée](Images/Pic-22.png)
+![Activation virtualisation](Images/Pic-22.png)
 
-> Si vous disposez de plusieurs nœuds de calcul (`compute02`, etc.), répétez l'opération pour chacun.
+### 5.2 Préparation du stockage sur `storage01`
 
-### 5.2 Attacher et préparer le disque de stockage sur `storage01`
+#### Ajouter les disques dans VMware
 
-Cinder (stockage bloc) et Swift (stockage objet) nécessitent un disque dédié.
+Ajoutez :
+- 1 disque de 20 Go pour Cinder
+- 3 disques de 20 Go pour Swift
 
-**Ajouter un disque virtuel dans VMware :**
-> ⚠️ Un disque de 20GB pour Cinder et 3 disques de 20GB pour Swift.
+![Ajout disque 1](Images/Pic-23.png)
+![Ajout disque 2](Images/Pic-24.png)
+![Ajout disque 3](Images/Pic-25.png)
+![Ajout disque 4](Images/Pic-26.png)
+![Ajout disque 5](Images/Pic-27.png)
+![Ajout disque 6](Images/Pic-28.png)
 
-![Ajout disque étape 1](Images/Pic-23.png)
-![Ajout disque étape 2](Images/Pic-24.png)
-![Ajout disque étape 3](Images/Pic-25.png)
-![Ajout disque étape 4](Images/Pic-26.png)
-![Ajout disque étape 5](Images/Pic-27.png)
-![Ajout disque étape 5](Images/Pic-28.png)
-
-**Vérifier la détection du disque :**
+#### Vérification des disques
 
 ```bash
 lsblk
+# Vous devriez voir : nvme0n2, nvme0n3, nvme0n4, nvme0n5
 ```
 
-**Initialiser le volume LVM pour Cinder :**
+#### Préparer le volume LVM pour Cinder
 
 ```bash
+# Créer le volume physique
 sudo pvcreate /dev/nvme0n2
+
+# Créer le groupe de volumes
 sudo vgcreate cinder-volumes /dev/nvme0n2
-sudo vgs  # validation
+
+# Vérifier
+sudo vgs
 ```
 
-> Adaptez `/dev/nvme0n2` au nom de disque détecté par `lsblk` sur votre système.
+#### Préparer les disques pour Swift
 
----
-
-Parfait, les 3 disques sont bien là et libres (nvme0n3, nvme0n4, nvme0n5, 20G chacun, aucune partition). On peut enchaîner toute la procédure.
-1. Préparer les disques (sur storage01)
-⚠️ Toutes les données sur ces 3 disques seront perdues (ils sont vierges, donc pas de risque ici).
-
+```bash
 index=0
 for d in nvme0n3 nvme0n4 nvme0n5; do
     sudo parted /dev/${d} -s -- mklabel gpt mkpart KOLLA_SWIFT_DATA 1 -1
     sudo mkfs.xfs -f -L d${index} /dev/${d}p1
     (( index++ ))
 done
+```
+
+> **Note :** Adaptez les noms de disques (`nvme0nX`) selon la sortie de `lsblk`.
 
 ---
 
-## Étape 6 — Partage NFS pour Glance
+## 📁 Étape 6 : Configuration du partage NFS
 
-Les trois contrôleurs doivent partager un répertoire commun `/mnt/glance` pour que le service Glance fonctionne en HA. `storage01` joue le rôle de serveur NFS.
+Glance (catalogue d'images) nécessite un stockage partagé entre les trois contrôleurs. `storage01` joue le rôle de serveur NFS.
 
-> ⚠️ Ce montage constitue un point de défaillance unique. Il est suffisant pour un environnement de lab, mais une solution redondante (NAS/SAN) est recommandée en production.
+> ⚠️ **Point de vigilance :** Le serveur NFS unique est un SPOF (Single Point of Failure). Pour la production, utilisez une solution redondante (NAS/SAN).
 
-### 6.1 Configurer le serveur NFS sur `storage01`
+### 6.1 Configuration du serveur NFS (storage01)
 
 ```bash
+# Installation du serveur NFS
 sudo dnf install -y nfs-utils
 
+# Création du répertoire partagé
 sudo mkdir -p /srv/nfs/glance
 sudo chmod 755 /srv/nfs/glance
 
-# Exporter le partage vers le réseau de management
+# Export du partage
 echo "/srv/nfs/glance 172.20.10.0/28(rw,sync,no_subtree_check,no_root_squash)" | \
   sudo tee -a /etc/exports
 
+# Démarrage du service
 sudo systemctl enable --now nfs-server
 sudo exportfs -ra
-sudo exportfs -v  # vérification
+sudo exportfs -v  # Vérification
 
-# Ouvrir le pare-feu
+# Configuration du firewall
 sudo firewall-cmd --permanent \
   --add-service=nfs \
   --add-service=rpc-bind \
@@ -504,190 +500,132 @@ sudo firewall-cmd --permanent \
 sudo firewall-cmd --reload
 ```
 
-> `no_root_squash` est requis : Ansible doit pouvoir corriger les permissions de ce dossier en tant que `root` lors du déploiement de Glance. Sans cette option, le conteneur `glance-api` échouera à écrire dans le répertoire.
+> `no_root_squash` est obligatoire pour permettre aux conteneurs Glance d'écrire dans le répertoire en tant que root.
 
-### 6.2 Monter le partage sur les trois contrôleurs
+### 6.2 Montage sur les contrôleurs
 
-À répéter sur **`controller01`**, **`controller02`** et **`controller03`** :
+**Répéter sur `controller01`, `controller02` et `controller03` :**
 
 ```bash
 sudo dnf install -y nfs-utils
 
 sudo mkdir -p /mnt/glance
 
-# Remplacez 172.20.10.8 par l'IP réelle de storage01 si différente
+# Ajout au fstab
 echo "172.20.10.8:/srv/nfs/glance /mnt/glance nfs defaults,_netdev 0 0" | \
   sudo tee -a /etc/fstab
 
+# Montage
 sudo mount -a
-df -h /mnt/glance  # doit afficher le montage NFS, pas le disque local
+
+# Vérification
+df -h /mnt/glance
 ```
 
-### 6.3 Vérifier le partage entre les nœuds
+### 6.3 Test du partage
 
 ```bash
 # Depuis controller01
 sudo touch /mnt/glance/test-partage
 
 # Depuis controller02 et controller03
-ls -la /mnt/glance/test-partage  # doit être visible sur les deux nœuds
+ls -la /mnt/glance/test-partage  # Doit être visible
 
 # Nettoyage
 sudo rm /mnt/glance/test-partage
 ```
 
-> ⚠️ Si le fichier n'est pas visible sur les autres contrôleurs, **ne lancez pas `kolla-ansible deploy`** — le partage n'est pas correctement configuré.
+> **⚠️ Si le fichier n'est pas visible, ne continuez pas !** Le partage NFS n'est pas fonctionnel.
 
-### 6.4 SELinux sur Rocky Linux
+### 6.4 Configuration SELinux
 
-Si SELinux est en mode `enforcing` (par défaut), le bind-mount NFS vers les conteneurs peut être bloqué. En cas d'erreurs de permission côté `glance-api` après déploiement malgré un montage fonctionnel :
+Sur Rocky Linux, SELinux peut bloquer l'accès NFS aux conteneurs :
 
 ```bash
-# Diagnostiquer les refus SELinux
-ausearch -m avc -ts recent
+# Diagnostiquer les problèmes SELinux
+sudo ausearch -m avc -ts recent
 
-# Autoriser l'accès NFS par les conteneurs virtuels
+# Autoriser l'accès NFS
 sudo setsebool -P virt_use_nfs on
 ```
 
 ---
 
-### Générer des clés SSH pour l'utilisateur `kolla`
+## 🔑 Étape 7 : Préparation SSH et installation de Kolla-Ansible
 
-Nous allons maintenant générer une clé SSH pour l'utilisateur `kolla` on `controller01` et copier la clé publique sur tous les autres nœuds du même utilisateur (`kolla`). Cette étape est essentielle pour l'accès SSH sans mot de passe, utilisé par Kolla Ansible pour opérer sur les nœuds distants.
+### 7.1 Génération des clés SSH
 
+**Sur `controller01`, en tant qu'utilisateur `kolla` :**
 
-1. Connectez-vous en tant que `kolla` sur `controller01`.
+```bash
+# Génération de la clé SSH
+ssh-keygen -t rsa -b 4096 -N "" -f ~/.ssh/id_rsa
 
-2. Générer une paire de clés:
-    ```bash
-    ssh-keygen -t rsa -b 4096 -N "" -f ~/.ssh/id_rsa
-    ```
+# Copie sur tous les nœuds
+for host in controller01 controller02 controller03 compute01 network01 storage01; do
+  ssh-copy-id kolla@$host
+done
 
-3.Copiez la clé publique sur tous les nœuds :
-    ```bash
-    for host in controller01 controller02 controller03 compute01 network01 storage01; do
-      ssh-copy-id kolla@$host
-    done
-    ```
+# Test de connexion
+ssh kolla@controller03
+```
 
-> 📌 Le mot de passe de l'utilisateur `kolla` vous sera demandé sur chaque hôte.
+### 7.2 Installation de Kolla-Ansible
 
-4. Test:
-    ```bash
-    ssh kolla@controller03
-    ```
+Toutes les étapes suivantes sont exécutées sur `controller01` en tant qu'utilisateur `kolla`.
 
----
+```bash
+# Mise à jour du système
+sudo dnf update -y
 
-## Installation d'OpenStack avec Kolla-Ansible
+# Installation des dépendances
+sudo dnf install -y git python3-devel libffi-devel gcc openssl-devel python3-libselinux
+```
 
-Toutes les étapes suivantes sont exécutées sur le nœud de déploiement ( controller01), qui orchestre l'environnement OpenStack complet à l'aide de Kolla Ansible.
+#### Créer un environnement virtuel Python
 
+```bash
+python3 -m venv ~/kolla-ansible
+source ~/kolla-ansible/bin/activate
+pip install --upgrade pip
+```
 
----
+#### Installer Ansible
 
-### Installer les dépendances
+```bash
+pip install ansible-core
+```
 
-1. Mise à jour des paquets système :
-   ```bash
-   sudo dnf update -y
-   ```
+#### Configurer Ansible
 
-2. Installer les dépendances de compilation Python :
-    ```bash
-   sudo dnf install git python3-devel libffi-devel gcc openssl-devel python3-libselinux -y
-   ```
-    
-### Créer un environnement virtuel pour le déploiement de Kolla-ansible
-Pour éviter les conflits entre les paquets système et les paquets Kolla-ansible, il est recommandé d'installer Kolla-ansible dans un environnement virtuel.
+```bash
+cat > $HOME/ansible.cfg << 'EOF'
+[defaults]
+host_key_checking=False
+pipelining=True
+forks=100
+EOF
+```
 
-1. Vous pouvez créer un environnement virtuel sur le nœud ( controller01) en exécutant la commande ci-dessous. Veillez à remplacer le chemin d'accès à votre environnement virtuel.
+#### Installer Kolla-Ansible
 
-   ```bash
-   mkdir ~/kolla-ansible
-   ```
+```bash
+source ~/kolla-ansible/bin/activate
+pip install kolla-ansible
 
-2. Créez un nouvel environnement virtuel
+# Création du répertoire de configuration
+sudo mkdir -p /etc/kolla
+sudo chown $USER:$USER /etc/kolla
 
-   ```bash
-   python3 -m venv ~/kolla-ansible
-   ```
+# Copie des fichiers de configuration
+cp -r /usr/local/share/kolla-ansible/etc_examples/kolla/* /etc/kolla/
 
-3. Activez-le
+# Copie de l'inventaire multinœud
+cp /usr/local/share/kolla-ansible/ansible/inventory/multinode .
 
-   ```bash
-   source ~/kolla-ansible/bin/activate
-   ```
-
-4. Mettez à jour pip lui-même
-   
-   ```bash
-   pip install --upgrade pip
-   ```
-
----
-
-## Installer Ansible sur Rocky 10.2
-
-1. Installez ansible-core
-   ```bash
-    pip install ansible-core
-   ```
-
-2. Créez un fichier de configuration Ansible dans votre répertoire personnel avec les paramètres suivants :
-   ```bash
-    nano $HOME/ansible.cfg
-   ```
-   ```bash
-    [defaults]
-    host_key_checking=False
-    pipelining=True
-    forks=100
-   ```
-> Enregistrez et fermez le fichier Ctrl + O + Entrée + x.
-
-
-## Installez Kolla-ansible sur Rocky 10.2
-
-Installez Kolla-ansible sur sur Rocky 10.2 en utilisant pip depuis l'environnement virtuel ci-dessus :
- ```bash
-   source ~/kolla-ansible/bin/activate
-   ```
-   
-1. Installez kolla-ansible
-   ```bash
-   pip install kolla-ansible
-   ```
-
-2. Créez le répertoire de configuration :
-
-   ```bash
-   sudo mkdir -p /etc/kolla
-   sudo chown $USER:$USER /etc/kolla
-   ```
-
-3. Copiez les fichiers de configuration d'exemple :
-
-   ```bash
-   cp -r /usr/local/share/kolla-ansible/etc_examples/kolla/* /etc/kolla/
-   ```
-
-4. Copiez le fichier d'inventaire multinœud dans le répertoire courant :
-
-   ```bash
-   cp /usr/local/share/kolla-ansible/ansible/inventory/multinode .
-   ```
-
-   > ℹ️ Nous utilisons multinode pour déployer une configuration OpenStack hautement disponible sur plusieurs nœuds.
-
-   
-2. Installer les dépendances d'Ansible Galaxy
-    ```bash
-   kolla-ansible install-deps
-   ```
+# Installation des dépendances Ansible Galaxy
+kolla-ansible install-deps
+```
 
 ---
-
-
 
