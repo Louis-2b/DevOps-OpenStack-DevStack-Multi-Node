@@ -710,7 +710,7 @@ nano /etc/kolla/globals.yml
 Collez la configuration suivante :
 
 <details>
-Elle se trouve dans : Config/globals.yml du projet.
+Elle se trouve dans : Config/globals.yml du projet cliquer sur le lien pour accéder.
 
 ---
 
@@ -729,3 +729,142 @@ Elle se trouve dans : Config/globals.yml du projet.
 #### Fichier d'inventaire `multinode`
 
 * Définit les rôles et les groupes de nœuds pour le déploiement Ansible.
+
+<details>
+Elle se trouve dans : Config/multinode du projet cliquer sur le lien pour accéder.
+
+---
+
+### **Étapes à suivre maintenant :**
+
+2. **Ajoute l’entrée dans `/etc/hosts`** (sur tous les nœuds + ton poste) :
+   ```bash
+   sudo tee -a /etc/hosts << EOF
+   172.20.10.14   openstack.tubie.lan   # Même IP que le VIP interne
+   EOF
+   ```
+---
+
+### Certificats
+
+```bash
+# Certificats TLS généraux
+kolla-ansible certificates -i multinode
+
+# Certificats Octavia
+kolla-ansible octavia-certificates -i multinode
+```
+
+---
+
+## 📁 Fichiers Importants
+
+- `/etc/kolla/globals.yml` → Configuration principale
+- `~/multinode` → Inventaire
+- `/etc/kolla/certificates/` → Certificats TLS
+- `/etc/kolla/config/octavia/` → Certificats Octavia
+- `/etc/hosts` → Doit contenir `openstack.tubie.lan`
+
+---
+
+### 📤Déployer OpenStack
+
+1. **Initialiser les serveurs :**
+
+   ```bash
+   kolla-ansible bootstrap-servers -i ./multinode
+   ```
+
+![Screenshot 50](Images/Pic-29.png)
+
+2. **Effectuez les vérifications préalables au déploiement :**
+
+   ```bash
+   kolla-ansible prechecks -i ./multinode
+   ```
+
+![Screenshot 51](Images/Pic-30.png)
+
+3. **Déploiement d'OpenStack :**
+
+   ```bash
+   kolla-ansible deploy -i ./multinode
+   ```
+
+![Screenshot 52](Images/Pic-31.png)
+
+4. **Valider les configurations de service :**
+
+   ```bash
+   kolla-ansible validate-config -i ./multinode
+   ```
+
+![Screenshot 53](Images/Pic-32.png)
+
+---
+
+### 🧪 Utilisation d'OpenStack après le déploiement
+
+1. **Configuration post-déploiement (génère `clouds.yaml`):**
+
+   ```bash
+   kolla-ansible post-deploy
+   ```
+
+![Screenshot 54](Images/Pic-33.png)
+
+2. **Vérifiez le fichier clouds.yaml**
+
+   ```bash
+   ls /etc/kolla/clouds.yaml
+   ```
+
+3. **Installer l'interface de ligne de commande OpenStack :**
+
+   ```bash
+   pip install python-openstackclient -c https://releases.openstack.org/constraints/upper/master
+   ```
+
+4. **Tester le déploiement :**
+
+- Essayez de lister les services :
+
+```bash
+openstack service list
+```
+
+![Screenshot 56](Images/Pic-34.png)
+
+- Fichier source des identifiants d'administrateur OpenStack (`admin-openrc.sh`) permettant d'interagir avec l'interface de ligne de commande OpenStack.
+
+```bash
+source /etc/kolla/admin-openrc.sh
+```
+
+![Screenshot 57](Images/Pic-35.png)
+
+- Vérifier l'état des nœuds de calcul (compute):
+
+```bash
+openstack compute service list
+```
+
+5. Accédez au tableau de bord Horizon : ouvrez votre navigateur et rendez-vous à l’adresse suivante : http://192.168.142.250
+
+   Identifiants de connexion :
+
+   * **Nom d'utilisateur:** `admin`
+   * **Mot de passe** (find it using)
+
+     ```bash
+     grep keystone_admin_password /etc/kolla/passwords.yml
+     ```
+
+![Screenshot 59](Images/Pic-36.png)
+
+![Screenshot 60](Images/Pic-37.png)
+
+![Screenshot 61](Images/Pic-38.png)
+
+---
+
