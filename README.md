@@ -693,3 +693,39 @@ kolla-ansible install-deps
 kolla-ansible --version
 ansible --version
 ```
+
+---
+
+### Configurer les fichiers principaux
+
+#### `globals.yml`
+
+* **Chemin:** `/etc/kolla/globals.yml`
+* **Objectif:** Fichier de configuration principal pour la personnalisation du déploiement OpenStack.
+
+```bash
+nano /etc/kolla/globals.yml
+```
+
+Collez la configuration suivante :
+
+<details>
+<summary>🔽 Click to Expand `globals.yml` Example</summary>
+
+---
+
+#### `passwords.yml`
+
+* **Path:** `/etc/kolla/passwords.yml`
+* **Purpose:** Stores auto-generated or custom passwords for all OpenStack services.
+* **Generate it with:**
+
+  ```bash
+  kolla-genpwd
+  ```
+
+---
+
+#### `multinode` Inventory File
+
+* Defines node roles and groups for the Ansible deployment.
