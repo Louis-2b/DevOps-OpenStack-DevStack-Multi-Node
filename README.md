@@ -710,15 +710,15 @@ nano /etc/kolla/globals.yml
 Collez la configuration suivante :
 
 <details>
-<summary>🔽 Click to Expand `globals.yml` Example</summary>
+Elle se trouve dans : Config/globals.yml du projet.
 
 ---
 
 #### `passwords.yml`
 
-* **Path:** `/etc/kolla/passwords.yml`
-* **Purpose:** Stores auto-generated or custom passwords for all OpenStack services.
-* **Generate it with:**
+* **Chemin:** `/etc/kolla/passwords.yml`
+* **Objectif:** Stocker les mots de passe générés automatiquement ou personnalisés pour tous les services OpenStack.
+* **Générez-le avec:**
 
   ```bash
   kolla-genpwd
@@ -726,6 +726,6 @@ Collez la configuration suivante :
 
 ---
 
-#### `multinode` Inventory File
+#### Fichier d'inventaire `multinode`
 
-* Defines node roles and groups for the Ansible deployment.
+* Définit les rôles et les groupes de nœuds pour le déploiement Ansible.
